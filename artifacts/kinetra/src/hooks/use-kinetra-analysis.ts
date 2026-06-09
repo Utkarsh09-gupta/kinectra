@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { SessionInputAnalysisType } from "@workspace/api-client-react";
 
@@ -27,207 +27,254 @@ export interface KinetraAnalysisResult {
   stopAnalysis: () => void;
 }
 
+const DEFAULT_METRICS: KinetraMetrics = {
+  elbowAngle: 0,
+  kneeAngle: 0,
+  shoulderAlignment: 0,
+  spineTilt: 0,
+  headStability: 100,
+  balanceScore: 100,
+  techniqueScore: 100,
+  warnings: [],
+};
+
 function calculateAngle(a: Vector3D, b: Vector3D, c: Vector3D): number {
   const v1 = { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
   const v2 = { x: c.x - b.x, y: c.y - b.y, z: c.z - b.z };
-
-  const dotProduct = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+  const dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
   const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
   const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
-
-  const angleRad = Math.acos(dotProduct / (mag1 * mag2));
-  return (angleRad * 180.0) / Math.PI;
+  if (mag1 === 0 || mag2 === 0) return 0;
+  const clamped = Math.max(-1, Math.min(1, dot / (mag1 * mag2)));
+  return (Math.acos(clamped) * 180.0) / Math.PI;
 }
 
-export function useKinetraAnalysis(analysisType: SessionInputAnalysisType, dominantHand: string): KinetraAnalysisResult {
+export function useKinetraAnalysis(
+  analysisType: SessionInputAnalysisType,
+  dominantHand: string
+): KinetraAnalysisResult {
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [modelError, setModelError] = useState<string | null>(null);
-  
-  const [metrics, setMetrics] = useState<KinetraMetrics>({
-    elbowAngle: 0,
-    kneeAngle: 0,
-    shoulderAlignment: 0,
-    spineTilt: 0,
-    headStability: 100,
-    balanceScore: 100,
-    techniqueScore: 100,
-    warnings: [],
-  });
+  const [metrics, setMetrics] = useState<KinetraMetrics>(DEFAULT_METRICS);
 
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
-  const requestRef = useRef<number>(0);
+  const rafRef = useRef<number>(0);
   const isRunningRef = useRef(false);
   const lastVideoTimeRef = useRef(-1);
+  const graphDeadRef = useRef(false); // true after an unrecoverable MediaPipe graph error
+  // Throttle: track when we last ran inference
+  const lastInferenceTimeRef = useRef(0);
+  const FPS_INTERVAL = 1000 / 15; // 15 fps
 
+  // Load model once
   useEffect(() => {
-    let isMounted = true;
-    async function initModel() {
+    let cancelled = false;
+    async function init() {
       try {
         const vision = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
         const landmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
             delegate: "GPU",
           },
           runningMode: "VIDEO",
           numPoses: 1,
         });
-
-        if (isMounted) {
+        if (!cancelled) {
           poseLandmarkerRef.current = landmarker;
           setIsModelLoading(false);
         }
       } catch (err) {
-        console.error("Error loading MediaPipe model:", err);
-        if (isMounted) {
-          setModelError("Failed to load computer vision model. Please check your connection.");
+        if (!cancelled) {
+          setModelError("Failed to load vision model. Check your network connection.");
           setIsModelLoading(false);
         }
       }
     }
-
-    initModel();
+    init();
     return () => {
-      isMounted = false;
+      cancelled = true;
+      cancelAnimationFrame(rafRef.current);
       if (poseLandmarkerRef.current) {
-        poseLandmarkerRef.current.close();
+        try { poseLandmarkerRef.current.close(); } catch (_) {}
+        poseLandmarkerRef.current = null;
       }
     };
+  }, []); // intentionally empty — model loaded once per mount
+
+  const analyzePose = useCallback(
+    (landmarks: any[]) => {
+      if (!landmarks || landmarks.length === 0) return;
+      const pose = landmarks[0];
+      const isRight = dominantHand === "right";
+
+      const nose = pose[0];
+      const lShoulder = pose[11], rShoulder = pose[12];
+      const lElbow = pose[13], rElbow = pose[14];
+      const lWrist = pose[15], rWrist = pose[16];
+      const lHip = pose[23], rHip = pose[24];
+      const lKnee = pose[25], rKnee = pose[26];
+      const lAnkle = pose[27], rAnkle = pose[28];
+
+      const shoulder = isRight ? rShoulder : lShoulder;
+      const elbow = isRight ? rElbow : lElbow;
+      const wrist = isRight ? rWrist : lWrist;
+      const hip = isRight ? rHip : lHip;
+      const knee = isRight ? rKnee : lKnee;
+      const ankle = isRight ? rAnkle : lAnkle;
+
+      const elbowAngle = calculateAngle(shoulder, elbow, wrist);
+      const kneeAngle = calculateAngle(hip, knee, ankle);
+
+      const midHip = {
+        x: (lHip.x + rHip.x) / 2,
+        y: (lHip.y + rHip.y) / 2,
+        z: (lHip.z + rHip.z) / 2,
+      };
+      const midShoulder = {
+        x: (lShoulder.x + rShoulder.x) / 2,
+        y: (lShoulder.y + rShoulder.y) / 2,
+        z: (lShoulder.z + rShoulder.z) / 2,
+      };
+      const verticalAboveHip = { x: midHip.x, y: midHip.y - 1, z: midHip.z };
+      const spineTilt = calculateAngle(verticalAboveHip, midHip, midShoulder);
+      const shoulderAlignment = Math.abs(
+        calculateAngle(rShoulder, lShoulder, {
+          x: rShoulder.x,
+          y: lShoulder.y,
+          z: lShoulder.z,
+        })
+      );
+
+      const hipLevel = Math.abs(lHip.y - rHip.y);
+      const balanceScore = Math.max(0, Math.min(100, 100 - hipLevel * 500));
+
+      const warnings: string[] = [];
+      let techniqueScore = 100;
+
+      if (analysisType === "bowling") {
+        if (elbowAngle < 80) warnings.push("Elbow angle too low");
+        if (spineTilt > 30) warnings.push("Excessive spine tilt");
+        if (shoulderAlignment > 15) warnings.push("Poor shoulder rotation");
+        techniqueScore =
+          balanceScore * 0.25 +
+          Math.max(0, 100 - Math.abs(elbowAngle - 95)) * 0.25 +
+          Math.max(0, 100 - spineTilt * 2) * 0.3 +
+          Math.max(0, 100 - shoulderAlignment * 2) * 0.2;
+      } else {
+        if (kneeAngle < 120) warnings.push("Front knee bent too much");
+        if (elbowAngle < 90) warnings.push("Low bat lift");
+        techniqueScore =
+          balanceScore * 0.3 +
+          Math.max(0, 100 - Math.abs(kneeAngle - 150) * 0.5) * 0.3 +
+          Math.max(0, 100 - spineTilt * 2) * 0.2 +
+          Math.max(0, 100 - shoulderAlignment * 2) * 0.2;
+      }
+
+      setMetrics({
+        elbowAngle: Math.round(elbowAngle),
+        kneeAngle: Math.round(kneeAngle),
+        shoulderAlignment: Math.round(shoulderAlignment),
+        spineTilt: Math.round(spineTilt),
+        headStability: 95,
+        balanceScore: Math.round(balanceScore),
+        techniqueScore: Math.max(0, Math.min(100, Math.round(techniqueScore))),
+        warnings,
+      });
+    },
+    [analysisType, dominantHand]
+  );
+
+  const startAnalysis = useCallback(
+    (videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement) => {
+      if (!poseLandmarkerRef.current) return;
+      if (isRunningRef.current) return; // already running — don't double-start
+
+      isRunningRef.current = true;
+      const ctx = canvasElement.getContext("2d");
+      if (!ctx) return;
+      const drawingUtils = new DrawingUtils(ctx);
+
+      const loop = () => {
+        if (!isRunningRef.current) return;
+
+        const now = performance.now();
+
+        // Guard: video must be playing and have real dimensions
+        const ready =
+          videoElement.readyState >= 2 &&
+          videoElement.videoWidth > 0 &&
+          videoElement.videoHeight > 0 &&
+          !videoElement.paused &&
+          videoElement.srcObject !== null;
+
+        if (ready) {
+          // Sync canvas size to video
+          if (
+            canvasElement.width !== videoElement.videoWidth ||
+            canvasElement.height !== videoElement.videoHeight
+          ) {
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+          }
+
+          // Only infer when frame changed AND throttle to 15 fps
+          const frameChanged = videoElement.currentTime !== lastVideoTimeRef.current;
+          const throttleOk = now - lastInferenceTimeRef.current >= FPS_INTERVAL;
+
+          if (frameChanged && throttleOk && !graphDeadRef.current) {
+            lastVideoTimeRef.current = videoElement.currentTime;
+            lastInferenceTimeRef.current = now;
+
+            try {
+              const result = poseLandmarkerRef.current!.detectForVideo(
+                videoElement,
+                now
+              );
+              ctx.save();
+              ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+              if (result.landmarks && result.landmarks.length > 0) {
+                for (const landmark of result.landmarks) {
+                  drawingUtils.drawConnectors(
+                    landmark,
+                    PoseLandmarker.POSE_CONNECTIONS,
+                    { color: "#22c55e", lineWidth: 3 }
+                  );
+                  drawingUtils.drawLandmarks(landmark, {
+                    color: "#ffffff",
+                    lineWidth: 1,
+                    radius: 3,
+                  });
+                }
+                analyzePose(result.landmarks);
+              }
+              ctx.restore();
+            } catch (e) {
+              // MediaPipe graph entered error state — stop inference,
+              // wait for the video to stabilise, then reset so we try again.
+              graphDeadRef.current = true;
+              lastVideoTimeRef.current = -1;
+              // Allow a short recovery window before re-enabling inference
+              setTimeout(() => { graphDeadRef.current = false; }, 500);
+            }
+          }
+        }
+
+        rafRef.current = requestAnimationFrame(loop);
+      };
+
+      rafRef.current = requestAnimationFrame(loop);
+    },
+    [analyzePose, FPS_INTERVAL]
+  );
+
+  const stopAnalysis = useCallback(() => {
+    isRunningRef.current = false;
+    cancelAnimationFrame(rafRef.current);
   }, []);
 
-  const analyzePose = (landmarks: any[]) => {
-    if (!landmarks || landmarks.length === 0) return;
-    const pose = landmarks[0];
-
-    const isRight = dominantHand === "right";
-    
-    // Joint mapping
-    const nose = pose[0];
-    const leftShoulder = pose[11];
-    const rightShoulder = pose[12];
-    const leftElbow = pose[13];
-    const rightElbow = pose[14];
-    const leftWrist = pose[15];
-    const rightWrist = pose[16];
-    const leftHip = pose[23];
-    const rightHip = pose[24];
-    const leftKnee = pose[25];
-    const rightKnee = pose[26];
-    const leftAnkle = pose[27];
-    const rightAnkle = pose[28];
-
-    const shoulderElbow = isRight ? rightShoulder : leftShoulder;
-    const elbow = isRight ? rightElbow : leftElbow;
-    const wrist = isRight ? rightWrist : leftWrist;
-    
-    const hip = isRight ? rightHip : leftHip;
-    const knee = isRight ? rightKnee : leftKnee;
-    const ankle = isRight ? rightAnkle : leftAnkle;
-
-    const currentElbowAngle = calculateAngle(shoulderElbow, elbow, wrist);
-    const currentKneeAngle = calculateAngle(hip, knee, ankle);
-    
-    // Spine tilt: mid-hip to mid-shoulder vertical deviation
-    const midHip = { x: (leftHip.x + rightHip.x)/2, y: (leftHip.y + rightHip.y)/2, z: (leftHip.z + rightHip.z)/2 };
-    const midShoulder = { x: (leftShoulder.x + rightShoulder.x)/2, y: (leftShoulder.y + rightShoulder.y)/2, z: (leftShoulder.z + rightShoulder.z)/2 };
-    // angle between vertical line (midHip -> {x: midHip.x, y: midHip.y - 1, z: midHip.z}) and spine (midHip -> midShoulder)
-    const spineAngle = calculateAngle({ x: midHip.x, y: midHip.y - 1, z: midHip.z }, midHip, midShoulder);
-
-    // Shoulder alignment (tilt)
-    const currentShoulderAlignment = Math.abs(calculateAngle(rightShoulder, leftShoulder, {x: rightShoulder.x, y: leftShoulder.y, z: leftShoulder.z}));
-
-    // Balance (hip level check)
-    const hipLevel = Math.abs(leftHip.y - rightHip.y);
-    const currentBalanceScore = Math.max(0, 100 - (hipLevel * 500));
-
-    const warnings: string[] = [];
-
-    let currentTechniqueScore = 100;
-    
-    if (analysisType === "bowling") {
-      if (currentElbowAngle < 80) warnings.push("Elbow angle too low");
-      if (spineAngle > 30) warnings.push("Excessive spine tilt");
-      if (currentShoulderAlignment > 15) warnings.push("Poor shoulder rotation");
-      
-      currentTechniqueScore = 
-        (currentBalanceScore * 0.25) + 
-        (Math.max(0, 100 - Math.abs(currentElbowAngle - 95)) * 0.25) +
-        (Math.max(0, 100 - spineAngle * 2) * 0.3) +
-        (Math.max(0, 100 - currentShoulderAlignment * 2) * 0.2);
-
-    } else {
-      // Batting
-      if (currentKneeAngle < 120) warnings.push("Front knee bent too much");
-      if (currentElbowAngle < 90) warnings.push("Low bat lift");
-      
-      currentTechniqueScore = 
-        (currentBalanceScore * 0.3) + 
-        (Math.max(0, 100 - Math.abs(currentKneeAngle - 150) * 0.5) * 0.3) +
-        (Math.max(0, 100 - spineAngle * 2) * 0.2) +
-        (Math.max(0, 100 - currentShoulderAlignment * 2) * 0.2);
-    }
-
-    setMetrics({
-      elbowAngle: Math.round(currentElbowAngle),
-      kneeAngle: Math.round(currentKneeAngle),
-      shoulderAlignment: Math.round(currentShoulderAlignment),
-      spineTilt: Math.round(spineAngle),
-      headStability: 95, // Mocked for simplicity
-      balanceScore: Math.round(currentBalanceScore),
-      techniqueScore: Math.round(currentTechniqueScore),
-      warnings
-    });
-  };
-
-  const startAnalysis = (videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement) => {
-    if (!poseLandmarkerRef.current) return;
-    isRunningRef.current = true;
-    const canvasCtx = canvasElement.getContext("2d");
-    if (!canvasCtx) return;
-
-    const drawingUtils = new DrawingUtils(canvasCtx);
-
-    const renderLoop = () => {
-      if (!isRunningRef.current) return;
-
-      canvasElement.width = videoElement.videoWidth;
-      canvasElement.height = videoElement.videoHeight;
-
-      if (videoElement.currentTime !== lastVideoTimeRef.current) {
-        lastVideoTimeRef.current = videoElement.currentTime;
-        const result = poseLandmarkerRef.current!.detectForVideo(videoElement, performance.now());
-        
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        
-        if (result.landmarks) {
-          for (const landmark of result.landmarks) {
-            drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, { color: "#22c55e", lineWidth: 4 });
-            drawingUtils.drawLandmarks(landmark, { color: "#ffffff", lineWidth: 2, radius: 4 });
-          }
-          analyzePose(result.landmarks);
-        }
-        canvasCtx.restore();
-      }
-      
-      requestRef.current = requestAnimationFrame(renderLoop);
-    };
-
-    renderLoop();
-  };
-
-  const stopAnalysis = () => {
-    isRunningRef.current = false;
-    cancelAnimationFrame(requestRef.current);
-  };
-
-  return {
-    isModelLoading,
-    modelError,
-    metrics,
-    startAnalysis,
-    stopAnalysis
-  };
+  return { isModelLoading, modelError, metrics, startAnalysis, stopAnalysis };
 }

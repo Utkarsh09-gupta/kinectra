@@ -8,7 +8,7 @@ interface Vector3D {
   z: number;
 }
 
-export interface KinetraMetrics {
+export interface KinectraMetrics {
   elbowAngle: number;
   kneeAngle: number;
   shoulderAlignment: number;
@@ -19,15 +19,15 @@ export interface KinetraMetrics {
   warnings: string[];
 }
 
-export interface KinetraAnalysisResult {
+export interface KinectraAnalysisResult {
   isModelLoading: boolean;
   modelError: string | null;
-  metrics: KinetraMetrics;
+  metrics: KinectraMetrics;
   startAnalysis: (videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement) => void;
   stopAnalysis: () => void;
 }
 
-const DEFAULT_METRICS: KinetraMetrics = {
+const DEFAULT_METRICS: KinectraMetrics = {
   elbowAngle: 0,
   kneeAngle: 0,
   shoulderAlignment: 0,
@@ -49,13 +49,13 @@ function calculateAngle(a: Vector3D, b: Vector3D, c: Vector3D): number {
   return (Math.acos(clamped) * 180.0) / Math.PI;
 }
 
-export function useKinetraAnalysis(
+export function useKinectraAnalysis(
   analysisType: SessionInputAnalysisType,
   dominantHand: string
-): KinetraAnalysisResult {
+): KinectraAnalysisResult {
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [modelError, setModelError] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<KinetraMetrics>(DEFAULT_METRICS);
+  const [metrics, setMetrics] = useState<KinectraMetrics>(DEFAULT_METRICS);
 
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const rafRef = useRef<number>(0);
@@ -209,7 +209,7 @@ export function useKinetraAnalysis(
           videoElement.videoWidth > 0 &&
           videoElement.videoHeight > 0 &&
           !videoElement.paused &&
-          videoElement.srcObject !== null;
+          (videoElement.srcObject !== null || videoElement.src !== "");
 
         if (ready) {
           // Sync canvas size to video

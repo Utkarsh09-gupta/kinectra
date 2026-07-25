@@ -48,17 +48,23 @@ function getJoint(id: string) {
 }
 
 function CricketVisual() {
+  const duration = 2.6; // Animation loop duration in seconds
+
   return (
     <div className="relative w-full flex items-center justify-center select-none">
       <svg viewBox="0 0 320 320" className="w-full max-w-[320px]" fill="none">
-        {/* Subtle radial glow */}
+        {/* Subtle radial glow & gradients */}
         <defs>
           <radialGradient id="glow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#F28C28" stopOpacity="0.15" />
             <stop offset="100%" stopColor="#F28C28" stopOpacity="0" />
           </radialGradient>
+          <radialGradient id="ball-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="1" />
+          </radialGradient>
           <filter id="blur-sm">
-            <feGaussianBlur stdDeviation="1.5" />
+            <feGaussianBlur stdDeviation="1.2" />
           </filter>
         </defs>
         <circle cx="160" cy="160" r="140" fill="url(#glow)" />
@@ -70,6 +76,16 @@ function CricketVisual() {
         {[60, 120, 180, 240].map(x => (
           <line key={x} x1={x} y1="20" x2={x} y2="300" stroke="#F28C28" strokeOpacity="0.06" strokeWidth="1" />
         ))}
+
+        {/* Trajectory dashed guide line */}
+        <path
+          d="M 240,100 Q 190,200 150,268 Q 115,234 80,200"
+          stroke="#F28C28"
+          strokeWidth="1.2"
+          strokeDasharray="3 3"
+          strokeOpacity="0.3"
+          fill="none"
+        />
 
         {/* Connections — animated draw */}
         {CONNECTIONS.map(([a, b], i) => {
@@ -111,6 +127,111 @@ function CricketVisual() {
             <circle cx={j.cx} cy={j.cy} r={2} fill="#F28C28" />
           </motion.g>
         ))}
+
+        {/* Crease / Ground lines */}
+        <line x1="60" y1="268" x2="100" y2="268" stroke="#374151" strokeWidth="1.2" strokeOpacity="0.4" />
+        <line x1="220" y1="268" x2="260" y2="268" stroke="#374151" strokeWidth="1.2" strokeOpacity="0.4" />
+
+        {/* Wickets / Stumps (located at x = 80, ground y = 268) */}
+        <motion.g
+          animate={{
+            skewX: [0, 0, 0, -8, 4, -2, 0, 0],
+            translateX: [0, 0, 0, -2, 1, 0, 0, 0],
+          }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+            times: [0, 0.5, 0.58, 0.62, 0.68, 0.74, 0.8, 1],
+          }}
+          style={{ transformOrigin: "80px 268px" }}
+        >
+          {/* Stumps */}
+          <line x1="75" y1="200" x2="75" y2="268" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.85" />
+          <line x1="80" y1="200" x2="80" y2="268" stroke="#d1d5db" strokeWidth="2.2" strokeLinecap="round" strokeOpacity="0.85" />
+          <line x1="85" y1="200" x2="85" y2="268" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.85" />
+
+          {/* Left Bail */}
+          <motion.line
+            x1="74" y1="198" x2="80" y2="198"
+            stroke="#f97316" strokeWidth="1.8" strokeLinecap="round"
+            animate={{
+              y: [0, 0, 0, -24, -12, 12, 52, 52],
+              x: [0, 0, 0, -14, -22, -30, -38, -38],
+              rotate: [0, 0, 0, 90, 180, 270, 360, 360],
+              opacity: [0.9, 0.9, 0.9, 0.9, 0.9, 0.6, 0, 0],
+            }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              ease: "easeOut",
+              times: [0, 0.5, 0.58, 0.65, 0.72, 0.8, 0.9, 1],
+            }}
+            style={{ transformOrigin: "77px 198px" }}
+          />
+
+          {/* Right Bail */}
+          <motion.line
+            x1="80" y1="198" x2="86" y2="198"
+            stroke="#f97316" strokeWidth="1.8" strokeLinecap="round"
+            animate={{
+              y: [0, 0, 0, -20, -6, 16, 52, 52],
+              x: [0, 0, 0, 8, 16, 24, 30, 30],
+              rotate: [0, 0, 0, -75, -150, -220, -300, -300],
+              opacity: [0.9, 0.9, 0.9, 0.9, 0.9, 0.6, 0, 0],
+            }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              ease: "easeOut",
+              times: [0, 0.5, 0.58, 0.65, 0.72, 0.8, 0.9, 1],
+            }}
+            style={{ transformOrigin: "83px 198px" }}
+          />
+        </motion.g>
+
+        {/* Pitch Impact Ripple Effect (at x = 150, y = 268) */}
+        <motion.circle
+          cx="150"
+          cy="268"
+          r={0}
+          fill="none"
+          stroke="#F28C28"
+          strokeWidth="1.5"
+          animate={{
+            r: [0, 0, 12, 22, 28],
+            opacity: [0, 0, 0.8, 0.4, 0],
+          }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: "easeOut",
+            times: [0, 0.42, 0.46, 0.54, 0.62],
+          }}
+        />
+
+        {/* Cricket Ball with Seam & Flight Scaling */}
+        <motion.g
+          animate={{
+            x: [240, 240, 150, 80, 80],
+            y: [100, 100, 268, 200, 200],
+            scale: [0, 1.2, 0.8, 0.6, 0],
+            opacity: [0, 1, 1, 1, 0],
+          }}
+          transition={{
+            duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+            times: [0, 0.12, 0.46, 0.58, 0.66],
+          }}
+        >
+          {/* Outer glowing halo */}
+          <circle cx="0" cy="0" r="6" fill="url(#ball-glow)" filter="url(#blur-sm)" opacity="0.6" />
+          {/* Inner physical ball */}
+          <circle cx="0" cy="0" r="4.5" fill="#dc2626" stroke="#991b1b" strokeWidth="0.5" />
+          {/* Seam line */}
+          <line x1="-4" y1="0" x2="4" y2="0" stroke="#ffffff" strokeWidth="0.7" strokeDasharray="1.2 0.8" />
+        </motion.g>
 
         {/* Floating metric chips */}
         {[
@@ -204,7 +325,7 @@ export default function Home() {
                   transition={{ duration: 0.55, delay: 0.16 }}
                   className="text-lg text-muted-foreground max-w-xl leading-relaxed"
                 >
-                  KINETRA tracks 33 body landmarks via your webcam, calculates joint angles frame-by-frame, and scores bowling or batting technique against elite biomechanical baselines — no wearables, no uploads, no latency.
+                  KINECTRA tracks 33 body landmarks via your webcam, calculates joint angles frame-by-frame, and scores bowling or batting technique against elite biomechanical baselines — no wearables, no uploads, no latency.
                 </motion.p>
               </div>
 
@@ -430,7 +551,7 @@ export default function Home() {
             <div className="w-6 h-6 bg-primary/15 rounded-lg flex items-center justify-center">
               <span className="text-primary font-bold font-mono text-xs">K</span>
             </div>
-            <span className="font-semibold text-foreground">KINETRA</span>
+            <span className="font-semibold text-foreground">KINECTRA</span>
           </div>
           <p>Built for the elite. Engineered for the driven.</p>
         </div>

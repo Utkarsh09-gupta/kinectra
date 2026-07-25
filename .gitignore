@@ -47,3 +47,9 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Env & Database Secrets
+.env
+.env.local
+.env.*
+.kinectra_db.json

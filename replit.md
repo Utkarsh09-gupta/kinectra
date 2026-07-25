@@ -1,11 +1,11 @@
-# KINETRA
+# KINECTRA
 
 Real-time computer vision sports biomechanics analysis platform for cricket technique coaching via webcam.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
-- `pnpm --filter @workspace/kinetra run dev` — run the frontend (port 24564)
+- `pnpm --filter @workspace/kinectra run dev` — run the frontend (port 24564)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -25,9 +25,9 @@ Real-time computer vision sports biomechanics analysis platform for cricket tech
 
 ## Where things live
 
-- `artifacts/kinetra/src/pages/` — 4 app pages (home, setup, analysis, results)
-- `artifacts/kinetra/src/hooks/use-kinetra-analysis.ts` — MediaPipe pose detection + angle calculation
-- `artifacts/kinetra/src/contexts/SessionContext.tsx` — session state shared between setup→analysis
+- `artifacts/kinectra/src/pages/` — 4 app pages (home, setup, analysis, results)
+- `artifacts/kinectra/src/hooks/use-kinectra-analysis.ts` — MediaPipe pose detection + angle calculation
+- `artifacts/kinectra/src/contexts/SessionContext.tsx` — session state shared between setup→analysis
 - `artifacts/api-server/src/routes/session.ts` — session CRUD + recommendation engine
 - `lib/db/src/schema/sessions.ts` — DB schema for analysis sessions
 - `lib/api-spec/openapi.yaml` — API contract (source of truth)
@@ -42,7 +42,7 @@ Real-time computer vision sports biomechanics analysis platform for cricket tech
 
 ## Product
 
-KINETRA analyzes cricket technique through a webcam using MediaPipe Pose Estimation. Athletes choose bowling or batting analysis, then KINETRA tracks 13 body landmarks in real time, calculates elbow/knee/shoulder/spine angles, scores technique, and shows live warnings when form breaks down. Sessions end with a summary of strengths, improvements, and personalized recommendations.
+KINECTRA analyzes cricket technique through a webcam using MediaPipe Pose Estimation. Athletes choose bowling or batting analysis, then KINECTRA tracks 13 body landmarks in real time, calculates elbow/knee/shoulder/spine angles, scores technique, and shows live warnings when form breaks down. Sessions end with a summary of strengths, improvements, and personalized recommendations.
 
 ## User preferences
 

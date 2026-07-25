@@ -1,4 +1,6 @@
 import { Router } from "express";
+import fs from "fs";
+import path from "path";
 import { db } from "@workspace/db";
 import { sessionsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
@@ -228,6 +230,140 @@ router.get("/session", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Failed to list sessions");
     res.status(500).json({ error: "Failed to list sessions" });
+  }
+});
+
+router.post("/session/:sessionId/chat", async (req, res): Promise<void> => {
+  const { sessionId } = req.params;
+  const { message, history, snapshots } = req.body;
+
+  if (!message || typeof message !== "string") {
+    res.status(400).json({ error: "Message is required" });
+    return;
+  }
+
+  try {
+    const session = await db
+      .select()
+      .from(sessionsTable)
+      .where(eq(sessionsTable.id, sessionId))
+      .limit(1);
+
+    if (!session.length) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
+
+    const s = session[0];
+
+    // Load Groq API Key
+    let apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      try {
+        const envPath = path.join(process.cwd(), ".env");
+        if (fs.existsSync(envPath)) {
+          const envContent = fs.readFileSync(envPath, "utf-8");
+          const match = envContent.match(/GROQ_API_KEY\s*=\s*(.+)/);
+          if (match) {
+            apiKey = match[1].trim().replace(/^['"]|['"]$/g, "");
+          }
+        }
+      } catch (err) {
+        req.log.error({ err }, "Failed to read .env file manually");
+      }
+    }
+
+    if (!apiKey) {
+      res.status(500).json({ error: "GROQ_API_KEY is not defined in process.env or .env file" });
+      return;
+    }
+
+    // Compile dynamic context
+    const warningsText = s.warnings && s.warnings.length > 0 
+      ? s.warnings.map((w: string) => `- Warning: ${w}`).join("\n") 
+      : "- No posture warnings triggered.";
+      
+    const recsText = s.recommendations && s.recommendations.length > 0 
+      ? s.recommendations.map((r: string) => `- Recommendation: ${r}`).join("\n") 
+      : "- Form is optimal. Continue regular practice.";
+
+    let snapshotsText = "";
+    if (Array.isArray(snapshots) && snapshots.length > 0) {
+      snapshotsText = "\nCaptured Frame-by-Frame Posture Details:\n" + 
+        snapshots.map((snap: any) => {
+          const m = snap.metrics;
+          const metricsStr = m ? ` (Elbow: ${m.elbowAngle}°, Spine Tilt: ${m.spineTilt}°, Knee: ${m.kneeAngle}°, Shoulder Alignment: ${m.shoulderAlignment}°)` : "";
+          return `- Event Label: "${snap.label}" | Captured at ${snap.time}${metricsStr}`;
+        }).join("\n");
+    } else {
+      snapshotsText = "\nNo frame-by-frame posture captures logged.";
+    }
+
+    const systemPrompt = `You are Kinectra's elite AI Sports Biomechanics Coach, named Coach Aryan.
+You are talking to the athlete: ${s.athleteName || "Athlete"}.
+Discipline: ${s.analysisType || "Cricket"} (${s.dominantHand || "right"}-handed)
+Overall Biomechanical Score: ${s.overallScore || 0}/100
+
+Active Technique Warnings:
+${warningsText}
+
+Recommended Drills:
+${recsText}
+${snapshotsText}
+
+Your instructions:
+1. Provide encouraging, professional coaching advice based on their metrics, warnings, and captured posture frames.
+2. Directly reference their score (${s.overallScore}/100), warnings, or specific captured frame metrics (such as the elbow angle or spine tilt in their "Bowling Stance" or "Setup Load" frames) when relevant.
+3. Be conversational and active. Keep your answers extremely concise (max 2-3 sentences) so the browser can read it aloud using Text-to-Speech (speechSynthesis) without lag.`;
+
+    const messages = [
+      { role: "system", content: systemPrompt }
+    ];
+
+    if (Array.isArray(history)) {
+      // Map history turns to API format: limit to last 4 turns to avoid token overhead
+      const recentHistory = history.slice(-4);
+      for (const turn of recentHistory) {
+        if (turn.sender && turn.text) {
+          messages.push({
+            role: turn.sender === "user" ? "user" : "assistant",
+            content: turn.text
+          });
+        }
+      }
+    }
+
+    messages.push({ role: "user", content: message });
+
+    // Call Groq endpoint
+    const response = await globalThis.fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages,
+        temperature: 0.3,
+        max_tokens: 150
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      req.log.error({ status: response.status, errorText }, "Groq API error response");
+      res.status(502).json({ error: "Failed to fetch response from Groq AI service" });
+      return;
+    }
+
+    const resJson = (await response.json()) as any;
+    const replyText = resJson?.choices?.[0]?.message?.content || "";
+
+    res.json({ reply: replyText.trim() });
+  } catch (err) {
+    req.log.error({ err }, "Error in chat assistant route");
+    res.status(500).json({ error: "Internal server error in chat coach assistant" });
   }
 });
 

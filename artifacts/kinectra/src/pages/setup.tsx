@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Activity, CircleUserRound, Loader2, ArrowRight } from "lucide-react";
+import { Activity, CircleUserRound, Loader2, ArrowRight, Camera, UploadCloud, AlertTriangle } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth_context";
 
 import { useStartSession } from "@workspace/api-client-react";
 import { useSessionContext } from "@/contexts/SessionContext";
@@ -32,34 +33,97 @@ export default function Setup() {
   const [, setLocation] = useLocation();
   const { setConfig } = useSessionContext();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  const [analysisMode, setAnalysisMode] = useState<"live" | "upload">("live");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("video/")) {
+        setVideoFile(file);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Invalid File",
+          description: "Please upload a valid sports video file.",
+        });
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setVideoFile(e.target.files[0]);
+    }
+  };
   
   const form = useForm<SetupFormValues>({
     resolver: zodResolver(setupSchema),
     defaultValues: {
-      athleteName: "",
+      athleteName: user?.username || "",
       analysisType: "bowling",
-      skillLevel: "intermediate",
-      dominantHand: "right",
+      skillLevel: user?.skillLevel || "intermediate",
+      dominantHand: user?.dominantHand || "right",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        athleteName: user.username,
+        analysisType: "bowling",
+        skillLevel: user.skillLevel as any,
+        dominantHand: user.dominantHand,
+      });
+    }
+  }, [user, form]);
 
   const startSessionMutation = useStartSession();
 
   const onSubmit = async (data: SetupFormValues) => {
+    if (analysisMode === "upload" && !videoFile) {
+      toast({
+        variant: "destructive",
+        title: "Video Required",
+        description: "Please upload a recorded video file before starting analysis.",
+      });
+      return;
+    }
+
     startSessionMutation.mutate(
       { data },
       {
         onSuccess: (session) => {
+          const videoUrl = videoFile ? URL.createObjectURL(videoFile) : null;
           setConfig({
             sessionId: session.id,
             athleteName: data.athleteName,
             analysisType: data.analysisType,
             skillLevel: data.skillLevel,
             dominantHand: data.dominantHand,
+            analysisMode,
+            videoFileUrl: videoUrl,
           });
           toast({
             title: "Session Created",
-            description: "Initializing computer vision models...",
+            description: analysisMode === "upload" ? "Processing uploaded video..." : "Initializing computer vision models...",
           });
           setLocation("/analysis");
         },
@@ -132,6 +196,97 @@ export default function Setup() {
                   </FormItem>
                 )}
               />
+
+              {/* Analysis Mode Options */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Analysis Mode</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Option 1: Live Camera */}
+                  <Card 
+                    className={`cursor-pointer border-2 transition-all ${analysisMode === 'live' ? 'border-primary bg-primary/5' : 'border-transparent hover:border-primary/30'} `}
+                    onClick={() => setAnalysisMode("live")}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                      <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center mb-4 text-orange-600 dark:text-orange-400">
+                        <Camera className="h-6 w-6" />
+                      </div>
+                      <h3 className="font-semibold text-base mb-1">Option 1: Live Analysis</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Start Camera for real-time browser-native pose tracking and instant technique scores.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Option 2: Upload Video */}
+                  <Card 
+                    className={`cursor-pointer border-2 transition-all ${analysisMode === 'upload' ? 'border-primary bg-primary/5 font-semibold' : 'border-transparent hover:border-primary/30'} `}
+                    onClick={() => setAnalysisMode("upload")}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4 text-primary">
+                        <UploadCloud className="h-6 w-6" />
+                      </div>
+                      <h3 className="font-semibold text-base mb-1">Option 2: Upload Video Analysis</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Select a pre-recorded sports video file to undergo high-precision biomechanics processing.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Conditional Video Upload Panel */}
+              {analysisMode === "upload" && (
+                <div className="space-y-4">
+                  <Card className="border-border">
+                    <CardContent className="p-6 space-y-4">
+                      <Label className="text-base font-semibold block">Upload sports video file</Label>
+                      
+                      <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/5 rounded-xl border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs">
+                        <AlertTriangle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                        <p className="leading-relaxed">
+                          For best results, upload a clear side-view or front-view video under 60 seconds. Max size: 100 MB.
+                        </p>
+                      </div>
+
+                      <div 
+                        onDragEnter={handleDrag}
+                        onDragOver={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                      >
+                        <input 
+                          ref={fileInputRef}
+                          type="file" 
+                          accept="video/*" 
+                          onChange={handleFileChange}
+                          className="hidden" 
+                        />
+                        <UploadCloud className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
+                        {videoFile ? (
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-primary">{videoFile.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(videoFile.size / (1024 * 1024)).toFixed(2)} MB • Video loaded successfully
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold">Drag & Drop your video file here</p>
+                            <p className="text-xs text-muted-foreground mb-4">Supported formats: MP4, MOV, AVI (Max 60s, 100MB)</p>
+                            <Button type="button" variant="secondary" size="sm" className="rounded-xl px-5 font-semibold text-xs border border-primary/20">
+                              Select Video Button
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border rounded-xl bg-card">
                 <FormField

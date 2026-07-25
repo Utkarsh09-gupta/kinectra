@@ -7,6 +7,8 @@ export interface SessionConfig {
   analysisType: SessionInputAnalysisType;
   skillLevel: SessionInputSkillLevel;
   dominantHand: SessionInputDominantHand;
+  analysisMode?: "live" | "upload";
+  videoFileUrl?: string | null;
 }
 
 interface SessionContextType {
@@ -21,6 +23,8 @@ const defaultConfig: SessionConfig = {
   analysisType: "bowling",
   skillLevel: "intermediate",
   dominantHand: "right",
+  analysisMode: "live",
+  videoFileUrl: null,
 };
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);

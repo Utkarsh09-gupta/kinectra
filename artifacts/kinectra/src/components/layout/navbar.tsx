@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth_context";
+import { KinectraLogoSVG } from "./kinectra_logo";
 
 const SECTIONS = [
   { label: "Home", id: "hero" },
@@ -20,6 +22,8 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location] = useLocation();
   const isHome = location === "/";
+  const { user, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => {
@@ -50,11 +54,9 @@ export function Navbar() {
     >
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group select-none">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
-            <span className="text-primary-foreground font-bold text-sm font-mono">K</span>
-          </div>
-          <span className="font-bold tracking-tight text-foreground text-[17px]">KINETRA</span>
+        <Link href="/" className="flex items-center gap-2 group select-none">
+          <KinectraLogoSVG className="w-8 h-8 transition-transform group-hover:scale-105" />
+          <span className="font-bold tracking-tight text-foreground text-[17px]">KINECTRA</span>
         </Link>
 
         {/* Desktop nav — only on home */}
@@ -93,6 +95,65 @@ export function Navbar() {
               </button>
             </Link>
           )}
+
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-muted transition-all border border-transparent"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-xs uppercase shadow-sm">
+                  {user.username.substring(0, 2)}
+                </div>
+                <span className="hidden md:inline text-sm font-semibold text-foreground max-w-[100px] truncate">
+                  {user.username}
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-48 bg-background border rounded-xl shadow-xl p-2.5 z-50 flex flex-col gap-1 text-left"
+                    >
+                      <div className="px-2 py-1.5 border-b mb-1.5 text-xs text-muted-foreground font-medium truncate">
+                        Signed in as <span className="font-bold text-foreground block">{user.email}</span>
+                      </div>
+                      <Link href="/setup">
+                        <button 
+                          onClick={() => setDropdownOpen(false)}
+                          className="w-full text-left px-2 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-lg transition-colors"
+                        >
+                          Start New Session
+                        </button>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          logout();
+                        }}
+                        className="w-full text-left px-2 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/5 rounded-lg transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <Link href="/auth">
+              <button className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-muted/30">
+                Sign In
+              </button>
+            </Link>
+          )}
+
           <Link href="/setup">
             <Button size="sm" className="shadow-sm font-semibold">
               Start Analysis

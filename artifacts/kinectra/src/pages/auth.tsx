@@ -1,0 +1,283 @@
+import React, { useState } from "react";
+import { useLocation, Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/auth_context";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Activity, User, Mail, Shield, UserCheck, School, Lock } from "lucide-react";
+import { KinectraLogoSVG } from "@/components/layout/kinectra_logo";
+
+export default function Auth() {
+  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [, setLocation] = useLocation();
+  const { login, signup } = useAuth();
+  const { toast } = useToast();
+
+  // Form states
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [sportsAcademy, setSportsAcademy] = useState("");
+  const [skillLevel, setSkillLevel] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
+  const [dominantHand, setDominantHand] = useState<"right" | "left">("right");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a username.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!password.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (activeTab === "login") {
+        const success = await login(username.trim(), password.trim());
+        if (success) {
+          toast({
+            title: "Welcome Back!",
+            description: `Successfully signed in as ${username}.`,
+          });
+          setLocation("/setup");
+        } else {
+          toast({
+            title: "Access Denied",
+            description: "Invalid username or password. Please verify credentials.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        if (!email.trim() || !email.includes("@")) {
+          toast({
+            title: "Validation Error",
+            description: "Please enter a valid email address.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const success = await signup(username.trim(), email.trim(), skillLevel, dominantHand, sportsAcademy.trim(), password.trim());
+        if (success) {
+          toast({
+            title: "Profile Created",
+            description: "Your athlete account has been registered.",
+          });
+          setLocation("/setup");
+        } else {
+          toast({
+            title: "Registration Failed",
+            description: "This username or email is already taken.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Authentication Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center relative overflow-hidden px-4 py-12">
+      {/* Decorative Blur Backgrounds */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/15 rounded-full blur-[110px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[110px] pointer-events-none" />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-[480px] z-10"
+      >
+        {/* Brand Header */}
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Link href="/" className="flex flex-col items-center gap-2 group select-none">
+            <KinectraLogoSVG className="w-12 h-12 transition-transform group-hover:scale-105" />
+            <span className="font-extrabold tracking-tight text-foreground text-2xl">KINECTRA</span>
+          </Link>
+          <p className="text-muted-foreground text-sm mt-3">Biomechanical AI Pose Tracking & Performance Engine</p>
+        </div>
+
+        {/* Auth Card */}
+        <Card className="border-border bg-card/60 backdrop-blur-xl shadow-2xl relative">
+          <CardHeader className="pb-4">
+            <div className="grid grid-cols-2 bg-background/80 p-1 rounded-xl border border-border mb-4">
+              <button
+                type="button"
+                onClick={() => { setActiveTab("login"); }}
+                className={`py-2 text-sm font-semibold rounded-lg transition-all ${
+                  activeTab === "login"
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveTab("signup"); }}
+                className={`py-2 text-sm font-semibold rounded-lg transition-all ${
+                  activeTab === "signup"
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Create Profile
+              </button>
+            </div>
+            <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+              {activeTab === "login" ? "Welcome Athlete" : "Register Profile"}
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-xs">
+              {activeTab === "login" 
+                ? "Enter your athlete username to load your stats and calibration details." 
+                : "Configure your profile metadata to receive tailored joint stress metrics."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Username */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" /> Username
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. virat_kohli"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-muted-foreground/45 transition-all"
+                  required
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5" /> Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-muted-foreground/45 transition-all"
+                  required
+                />
+              </div>
+
+              {/* Toggleable Sign Up fields */}
+              <AnimatePresence initial={false} mode="wait">
+                {activeTab === "signup" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4 overflow-hidden"
+                  >
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5" /> Email Address
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="athlete@domain.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-muted-foreground/45 transition-all"
+                        required={activeTab === "signup"}
+                      />
+                    </div>
+
+                    {/* Sports Academy */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <School className="h-3.5 w-3.5" /> Sports Academy / Club
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. National Cricket Academy"
+                        value={sportsAcademy}
+                        onChange={(e) => setSportsAcademy(e.target.value)}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-muted-foreground/45 transition-all"
+                      />
+                    </div>
+
+                    {/* Cricket Metadata Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Skill level */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                          <Shield className="h-3.5 w-3.5" /> Skill Level
+                        </label>
+                        <select
+                          value={skillLevel}
+                          onChange={(e) => setSkillLevel(e.target.value as any)}
+                          className="w-full bg-background border border-border rounded-xl px-3 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all [&>option]:bg-card"
+                        >
+                          <option value="beginner">Beginner</option>
+                          <option value="intermediate">Intermediate</option>
+                          <option value="advanced">Elite / Pro</option>
+                        </select>
+                      </div>
+
+                      {/* Dominant Hand */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                          <UserCheck className="h-3.5 w-3.5" /> Stance Hand
+                        </label>
+                        <select
+                          value={dominantHand}
+                          onChange={(e) => setDominantHand(e.target.value as any)}
+                          className="w-full bg-background border border-border rounded-xl px-3 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all [&>option]:bg-card"
+                        >
+                          <option value="right">Right Handed</option>
+                          <option value="left">Left Handed</option>
+                        </select>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-12 rounded-xl mt-6 font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
+              >
+                <Activity className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                {isLoading 
+                  ? "Authenticating..." 
+                  : activeTab === "login" 
+                    ? "Access Dashboard" 
+                    : "Create Athlete Profile"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}

@@ -127,7 +127,8 @@ export default function Results() {
 
     try {
       const token = localStorage.getItem("kinectra_token");
-      const res = await fetch(`/api/session/${sessionId}/chat`, {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${API_BASE_URL}/api/session/${sessionId}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

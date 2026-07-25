@@ -29,13 +29,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
   useEffect(() => {
     const fetchMe = async () => {
       try {
         const token = localStorage.getItem("kinectra_token");
         if (token) {
-          const res = await fetch("/api/auth/me", {
+          const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -54,11 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     fetchMe();
-  }, []);
+  }, [API_BASE_URL]);
 
   const login = async (username: string, password?: string): Promise<boolean> => {
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password?: string
   ): Promise<boolean> => {
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

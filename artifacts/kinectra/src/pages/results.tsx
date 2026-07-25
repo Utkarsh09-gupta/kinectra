@@ -920,10 +920,10 @@ export default function Results() {
                   </CardContent>
                 </Card>
 
-                {/* E. Agent 5 Pattern Alerts */}
+                {/* E. AI Pattern Alerts */}
                 <Card className="shadow-sm">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold">Agent 5 Pattern Alerts</CardTitle>
+                    <CardTitle className="text-base font-semibold">AI Pattern Alerts</CardTitle>
                     <CardDescription className="text-xs">
                       Multi-week mistake and technique tracking
                     </CardDescription>

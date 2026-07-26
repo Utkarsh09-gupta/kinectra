@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link } from "wouter";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   ChevronRight,
   Camera,
@@ -273,6 +273,9 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 
 // ─── Home page ─────────────────────────────────────────────────────
 export default function Home() {
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -538,24 +541,262 @@ export default function Home() {
                   Run Your Analysis <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <p className="mt-3 text-sm text-muted-foreground">Free · Browser-only · No account needed</p>
             </FadeIn>
+          </div>
+        </section>
+
+        {/* ── Pricing ── */}
+        <section id="pricing" className="py-24 md:py-32 bg-muted/20 border-t border-border/40 relative">
+          <div className="container mx-auto px-4 md:px-6">
+            <FadeIn className="text-center mb-16">
+              <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Pricing</p>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
+                Choose the telemetry tier designed for your training level. Start free, go pro when you are ready.
+              </p>
+            </FadeIn>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
+              {/* Card 1: Free */}
+              <FadeIn delay={0.05} className="flex">
+                <div className="flex-1 bg-card/65 backdrop-blur-md border border-border/60 rounded-2xl p-6 flex flex-col justify-between hover:border-primary/20 transition-all">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Free Plan</h3>
+                    <p className="text-xs text-muted-foreground mt-1">For casual training checks</p>
+                    <div className="flex items-baseline gap-1 mt-4 mb-6">
+                      <span className="text-4xl font-extrabold text-foreground">₹0</span>
+                      <span className="text-xs text-muted-foreground">/ forever</span>
+                    </div>
+                    <ul className="space-y-3 text-xs text-muted-foreground">
+                      <li className="flex items-center gap-2">✓ Real-time webcam tracking</li>
+                      <li className="flex items-center gap-2">✓ Sub-100ms local analysis</li>
+                      <li className="flex items-center gap-2">✓ Joint angle vector math</li>
+                      <li className="flex items-center gap-2 text-muted-foreground/35">✗ No permanent cloud storage</li>
+                      <li className="flex items-center gap-2 text-muted-foreground/35">✗ No progress tracker charts</li>
+                    </ul>
+                  </div>
+                  <Link href="/setup" className="mt-8">
+                    <Button variant="outline" className="w-full h-11 rounded-xl font-semibold">Get Started</Button>
+                  </Link>
+                </div>
+              </FadeIn>
+
+              {/* Card 2: Pro (Featured) */}
+              <FadeIn delay={0.1} className="flex">
+                <div className="flex-1 bg-card/85 backdrop-blur-md border-2 border-primary rounded-2xl p-6 flex flex-col justify-between relative shadow-lg shadow-primary/5 hover:scale-[1.01] transition-all">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground font-mono text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
+                    MOST POPULAR
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Pro Athlete</h3>
+                    <p className="text-xs text-muted-foreground mt-1">For dedicated players</p>
+                    <div className="flex items-baseline gap-1 mt-4 mb-6">
+                      <span className="text-4xl font-extrabold text-foreground">₹199</span>
+                      <span className="text-xs text-muted-foreground">/ month</span>
+                    </div>
+                    <ul className="space-y-3 text-xs text-foreground/90">
+                      <li className="flex items-center gap-2">✓ <strong>All Free Features</strong></li>
+                      <li className="flex items-center gap-2">✓ Permanent Cloud Session Storage</li>
+                      <li className="flex items-center gap-2">✓ Actual Stance Photo Comparisons</li>
+                      <li className="flex items-center gap-2">✓ 7-Day Performance Charts</li>
+                      <li className="flex items-center gap-2">✓ Unlimited Gemini AI Coach Reports</li>
+                    </ul>
+                  </div>
+                  <Link href="/auth" className="mt-8">
+                    <Button className="w-full h-11 rounded-xl font-semibold shadow-md shadow-primary/10">Go Pro</Button>
+                  </Link>
+                </div>
+              </FadeIn>
+
+              {/* Card 3: Plus */}
+              <FadeIn delay={0.15} className="flex">
+                <div className="flex-1 bg-card/65 backdrop-blur-md border border-border/60 rounded-2xl p-6 flex flex-col justify-between hover:border-primary/20 transition-all">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Plus (Coaches)</h3>
+                    <p className="text-xs text-muted-foreground mt-1">For clubs & academies</p>
+                    <div className="flex items-baseline gap-1 mt-4 mb-6">
+                      <span className="text-4xl font-extrabold text-foreground">₹3,999</span>
+                      <span className="text-xs text-muted-foreground">/ month</span>
+                    </div>
+                    <ul className="space-y-3 text-xs text-muted-foreground">
+                      <li className="flex items-center gap-2">✓ <strong>All Pro Features</strong></li>
+                      <li className="flex items-center gap-2">✓ Multi-Athlete Portals (Up to 50)</li>
+                      <li className="flex items-center gap-2">✓ Coach Review Commentary overlays</li>
+                      <li className="flex items-center gap-2">✓ High-Def video uploads (up to 200MB)</li>
+                      <li className="flex items-center gap-2">✓ Telemetry vector database export</li>
+                    </ul>
+                  </div>
+                  <Link href="/auth" className="mt-8">
+                    <Button variant="outline" className="w-full h-11 rounded-xl font-semibold">Get Plus</Button>
+                  </Link>
+                </div>
+              </FadeIn>
+
+              {/* Card 4: Enterprise */}
+              <FadeIn delay={0.2} className="flex">
+                <div className="flex-1 bg-card/65 backdrop-blur-md border border-border/60 rounded-2xl p-6 flex flex-col justify-between hover:border-primary/20 transition-all">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Enterprise</h3>
+                    <p className="text-xs text-muted-foreground mt-1">For professional institutions</p>
+                    <div className="flex items-baseline gap-1 mt-4 mb-6">
+                      <span className="text-4xl font-extrabold text-foreground">Custom</span>
+                      <span className="text-xs text-muted-foreground">/ tailored contract</span>
+                    </div>
+                    <ul className="space-y-3 text-xs text-muted-foreground">
+                      <li className="flex items-center gap-2">✓ <strong>All Plus Features</strong></li>
+                      <li className="flex items-center gap-2">✓ Multi-Angle Video Synchronization</li>
+                      <li className="flex items-center gap-2">✓ Bespoke baseline threshold models</li>
+                      <li className="flex items-center gap-2">✓ White-label academy dashboard hosting</li>
+                      <li className="flex items-center gap-2">✓ Dedicated sports biomechanics consulting</li>
+                    </ul>
+                  </div>
+                  <button 
+                    onClick={() => setIsContactOpen(true)}
+                    className="mt-8 w-full h-11 rounded-xl font-semibold border border-border bg-transparent text-sm text-foreground/80 hover:bg-muted/40 transition-colors"
+                  >
+                    Contact Biomechanics Team
+                  </button>
+                </div>
+              </FadeIn>
+
+            </div>
           </div>
         </section>
       </main>
 
       {/* ── Footer ── */}
-      <footer className="border-t py-10 bg-muted/20">
-        <div className="container mx-auto px-4 md:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary/15 rounded-lg flex items-center justify-center">
-              <span className="text-primary font-bold font-mono text-xs">K</span>
+      <footer className="border-t py-16 bg-muted/20 relative">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            {/* Logo info */}
+            <div className="col-span-2 md:col-span-1 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-primary/15 rounded-lg flex items-center justify-center">
+                  <span className="text-primary font-bold font-mono text-xs">K</span>
+                </div>
+                <span className="font-semibold text-foreground tracking-wider">KINECTRA</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px]">
+                Built for the elite. Engineered for the driven. Decoded sports telemetry in browser runtime.
+              </p>
             </div>
-            <span className="font-semibold text-foreground">KINECTRA</span>
+
+            {/* Column 1: Product */}
+            <div className="space-y-3 text-left">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Product</h4>
+              <ul className="space-y-2 text-xs flex flex-col items-start">
+                <li><button onClick={() => document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" })} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">Features</button></li>
+                <li><button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">How It Works</button></li>
+                <li><button onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">Pricing</button></li>
+                <li><button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">Demo Preview</button></li>
+              </ul>
+            </div>
+
+            {/* Column 2: Company */}
+            <div className="space-y-3 text-left">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Company</h4>
+              <ul className="space-y-2 text-xs flex flex-col items-start">
+                <li><button onClick={() => setIsAboutOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">About Us</button></li>
+                <li><button onClick={() => setIsContactOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">Contact Us</button></li>
+                <li><Link href="/setup" className="text-muted-foreground hover:text-foreground transition-colors">Product Staging</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Legal */}
+            <div className="space-y-3 text-left">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Legal</h4>
+              <ul className="space-y-2 text-xs text-muted-foreground flex flex-col items-start">
+                <li className="hover:text-foreground transition-colors cursor-default">Privacy Policy</li>
+                <li className="hover:text-foreground transition-colors cursor-default">Terms of Service</li>
+                <li className="hover:text-foreground transition-colors cursor-default">Security Standards</li>
+              </ul>
+            </div>
           </div>
-          <p>Built for the elite. Engineered for the driven.</p>
+
+          <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+            <p>© {new Date().getFullYear()} Kinectra Biomechanical Systems. All rights reserved.</p>
+            <p>Made in partnership with Advanced Agentic Coding.</p>
+          </div>
         </div>
       </footer>
+
+      {/* ── About Us Modal ── */}
+      <AnimatePresence>
+        {isAboutOpen && (
+          <>
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50" onClick={() => setIsAboutOpen(false)} />
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-card border border-border/80 rounded-2xl p-6 w-full max-w-[480px] shadow-2xl relative pointer-events-auto"
+              >
+                <button 
+                  onClick={() => setIsAboutOpen(false)}
+                  className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none"
+                >
+                  ✕
+                </button>
+                <h3 className="text-lg font-bold text-foreground mb-3">About Kinectra Sports</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  Kinectra is founded by a passionate cohort of cricket biomechanics engineers and machine learning developers. 
+                  Our goal is to democratize elite athletic coaching by making computer vision telemetry accessible to every bowler and batter in the world—without needing expensive laboratory cameras or wearable sensor harnesses.
+                </p>
+                <div className="flex justify-between items-center bg-muted/30 border p-3 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">FOUNDED IN</span>
+                  <span className="text-primary font-bold text-xs">2026</span>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Contact Us Modal ── */}
+      <AnimatePresence>
+        {isContactOpen && (
+          <>
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50" onClick={() => setIsContactOpen(false)} />
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-card border border-border/80 rounded-2xl p-6 w-full max-w-[480px] shadow-2xl relative pointer-events-auto"
+              >
+                <button 
+                  onClick={() => setIsContactOpen(false)}
+                  className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none"
+                >
+                  ✕
+                </button>
+                <h3 className="text-lg font-bold text-foreground mb-3">Contact Biomechanics Team</h3>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Interested in setting up Kinectra Plus for your sports academy or custom integrations? Drop us your message.
+                </p>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setIsContactOpen(false);
+                  alert("Thank you! Our biomechanics consultancy team will contact you in 24 hours.");
+                }} className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase flex text-left">Email Address</label>
+                    <input required type="email" placeholder="coach@academy.com" className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase flex text-left">Message / Academy Info</label>
+                    <textarea required rows={3} placeholder="Tell us about your team size..." className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none" />
+                  </div>
+                  <Button type="submit" className="w-full h-10 rounded-xl font-semibold mt-2">Submit Query</Button>
+                </form>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

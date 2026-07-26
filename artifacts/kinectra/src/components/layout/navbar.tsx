@@ -10,6 +10,7 @@ const SECTIONS = [
   { label: "Home", id: "hero" },
   { label: "How It Works", id: "how-it-works" },
   { label: "Demo", id: "demo" },
+  { label: "Pricing", id: "pricing" },
 ];
 
 function scrollTo(id: string) {
@@ -28,7 +29,7 @@ export function Navbar() {
   useEffect(() => {
     const handler = () => {
       setScrolled(window.scrollY > 24);
-      const ids = ["demo", "how-it-works", "hero"];
+      const ids = ["pricing", "demo", "how-it-works", "hero"];
       for (const id of ids) {
         const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top <= 120) {

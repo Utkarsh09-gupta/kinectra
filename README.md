@@ -15,13 +15,21 @@ Kinectra is a browser-native, real-time computer vision sports biomechanics anal
 *   **Audio Coaching Alerts**: Dynamic audio alerts spoken in real-time when technique thresholds break down (e.g., *"Excessive spine tilt"*).
 *   **AI Coach Mute Control**: Toggle audio coaching on/off with persistent browser session storage.
 
-### 3. Interactive Progress Tracker
+### 3. Interactive Progress Tracker & Snapshots
 *   **7-Day Performance SVG Chart**: Inline gradient line charts plotting athlete score improvements.
 *   **Baseline Variance Analysis**: Comparison tables highlighting angle deviations from professional benchmarks.
 *   **Inflection Point Snapshots**: Freeze-frame captures at peak delivery and stance movements paired with joint metric grids.
+*   **Permanent Cloud Storage**: WebP video frame snapshots are permanently serialized as base64 JSON records inside the cloud database, enabling comparison comparisons (e.g., *"Today"* vs. *"7 Days Ago"*) that persist across sessions.
+*   **Aesthetic Sport Silhouettes**: High-fidelity batting (front-foot cover drive) and bowling (delivery release stride) vector silhouettes display as glowing neon fallbacks when no database snapshots are available.
 
 ### 4. Advanced AI Reporting
-*   Saves telemetry data and routes snapshots to the **Groq Llama 3 API** to generate comprehensive biomechanical technique reports.
+*   Saves telemetry data and routes snapshots to the **Google Gemini API** (`gemini-2.5-flash` model) to generate real-time biomechanical technique reports and actionable coaching summaries.
+
+### 5. Multi-Tier Pricing
+*   **Free Plan** (₹0): Real-time analysis with temporary memory storage.
+*   **Pro Athlete** (₹199/month): Permanent cloud storage, progress tracking, and Gemini AI reports.
+*   **Plus Plan** (₹3,999/month): Multiple athlete dashboards and coach overlay feedback.
+*   **Enterprise** (Custom): Multi-angle synchronization and custom academy portals.
 
 ---
 
@@ -32,7 +40,7 @@ Kinectra is a browser-native, real-time computer vision sports biomechanics anal
 *   **Pose Engine**: Google MediaPipe Vision Tasks (runs on WebAssembly & WebGPU/WebGL)
 *   **Backend API**: Node.js + Express 5
 *   **Database & ORM**: PostgreSQL (Neon Serverless) + Drizzle ORM
-*   **LLM Integration**: Groq Llama 3 API
+*   **LLM Integration**: Google Gemini API (`gemini-2.5-flash` model)
 *   **API Codegen**: Orval (OpenAPI yaml source of truth)
 
 ---
@@ -43,13 +51,13 @@ Kinectra is a browser-native, real-time computer vision sports biomechanics anal
 ├── artifacts/
 │   ├── kinectra/             # Vite + React Frontend App
 │   │   └── src/
-│   │       ├── components/   # UI elements (Branded hexagon logo, Navbar)
+│   │       ├── components/   # UI elements (Branded hexagon logo, Navbar, Footer)
 │   │       ├── contexts/     # Session context (athlete name, uploaded video url)
 │   │       ├── hooks/        # use-kinectra-analysis (MediaPipe skeleton tracking)
 │   │       └── pages/        # Home, Auth, Setup, Analysis, Results
 │   └── api-server/           # Node.js + Express API Server
 │       └── src/
-│           ├── routes/       # Auth (JWT log-ins), Session (Groq completions)
+│           ├── routes/       # Auth (JWT log-ins), Session (Gemini completions)
 │           └── utils/        # JWT utilities, Database connectors
 ├── lib/
 │   ├── db/                   # Drizzle database configurations and schema
@@ -78,7 +86,7 @@ cd kinectra
 Create a `.env` file in the root directory:
 ```env
 DATABASE_URL="postgresql://neondb_owner:...@ep-...aws.neon.tech/neondb?sslmode=require"
-GROQ_API_KEY="gsk_..."
+GEMINI_API_KEY="AIzaSy..."
 ```
 
 ### 4. Install Dependencies
@@ -113,4 +121,4 @@ pnpm --filter @workspace/kinectra run dev
 *   **Express Backend** (Render Web Service):
     *   **Build Command**: `pnpm install && pnpm run typecheck:libs && pnpm --filter @workspace/api-server run build`
     *   **Start Command**: `node --enable-source-maps ./artifacts/api-server/dist/index.mjs`
-    *   **Environment Variables**: `DATABASE_URL` and `GROQ_API_KEY`
+    *   **Environment Variables**: `DATABASE_URL` and `GEMINI_API_KEY`

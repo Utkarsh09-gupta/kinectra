@@ -5,6 +5,7 @@
  * KINECTRA API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Snapshot } from './snapshot';
 
 export interface SessionEndInput {
   frameCount: number;
@@ -14,4 +15,5 @@ export interface SessionEndInput {
   avgEfficiencyScore: number;
   overallScore: number;
   warnings: string[];
+  snapshots?: Snapshot[];
 }

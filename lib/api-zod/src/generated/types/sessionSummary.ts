@@ -9,6 +9,7 @@ import type { SessionSummaryAnalysisType } from './sessionSummaryAnalysisType';
 import type { SessionSummaryDominantHand } from './sessionSummaryDominantHand';
 import type { SessionSummarySkillLevel } from './sessionSummarySkillLevel';
 import type { SessionSummaryStatus } from './sessionSummaryStatus';
+import type { Snapshot } from './snapshot';
 
 export interface SessionSummary {
   id: string;
@@ -28,4 +29,5 @@ export interface SessionSummary {
   improvements: string[];
   recommendations: string[];
   warnings: string[];
+  snapshots?: Snapshot[];
 }

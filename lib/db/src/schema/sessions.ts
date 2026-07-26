@@ -19,6 +19,7 @@ export const sessionsTable = pgTable("sessions", {
   strengths: text("strengths").array().notNull().default([]),
   improvements: text("improvements").array().notNull().default([]),
   recommendations: text("recommendations").array().notNull().default([]),
+  snapshotsJson: text("snapshots_json").notNull().default("[]"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

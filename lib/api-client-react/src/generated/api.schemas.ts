@@ -86,6 +86,21 @@ export interface Session {
   status: SessionStatus;
 }
 
+export type SnapshotMetrics = {
+  elbowAngle?: number;
+  spineTilt?: number;
+  kneeAngle?: number;
+  shoulderAlignment?: number;
+};
+
+export interface Snapshot {
+  src: string;
+  label: string;
+  time: string;
+  category?: string;
+  metrics?: SnapshotMetrics;
+}
+
 export interface SessionEndInput {
   frameCount: number;
   avgPostureScore: number;
@@ -94,6 +109,7 @@ export interface SessionEndInput {
   avgEfficiencyScore: number;
   overallScore: number;
   warnings: string[];
+  snapshots?: Snapshot[];
 }
 
 export type SessionSummaryAnalysisType = typeof SessionSummaryAnalysisType[keyof typeof SessionSummaryAnalysisType];
@@ -148,6 +164,7 @@ export interface SessionSummary {
   improvements: string[];
   recommendations: string[];
   warnings: string[];
+  snapshots?: Snapshot[];
 }
 
 export interface ErrorResponse {

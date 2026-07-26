@@ -50,20 +50,28 @@ export default function Results() {
     }
   });
 
+  const currentSnapshots = (session?.snapshots && session.snapshots.length > 0)
+    ? session.snapshots
+    : sessionSnapshots;
+
   useEffect(() => {
     if (historySessions && session) {
       const prev = historySessions.find(h => h.id !== session.id);
       if (prev) {
         setPrevScore(prev.overallScore);
-        const storedPrev = sessionStorage.getItem(`kinectra_snapshots_${prev.id}`);
-        if (storedPrev) {
-          try {
-            const parsed = JSON.parse(storedPrev);
-            if (parsed.length > 0) {
-              setPrevSnapshot(parsed[0]);
+        if (prev.snapshots && prev.snapshots.length > 0) {
+          setPrevSnapshot(prev.snapshots[0]);
+        } else {
+          const storedPrev = sessionStorage.getItem(`kinectra_snapshots_${prev.id}`);
+          if (storedPrev) {
+            try {
+              const parsed = JSON.parse(storedPrev);
+              if (parsed.length > 0) {
+                setPrevSnapshot(parsed[0]);
+              }
+            } catch (e) {
+              console.error("Failed to parse previous snapshots", e);
             }
-          } catch (e) {
-            console.error("Failed to parse previous snapshots", e);
           }
         }
       }
@@ -745,9 +753,9 @@ export default function Results() {
                           <span className="bg-emerald-500/20 px-2 py-0.5 rounded-full text-[9px]">Form: {session.overallScore}</span>
                         </div>
                         <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
-                          {sessionSnapshots.length > 0 ? (
+                          {currentSnapshots.length > 0 ? (
                             <>
-                              <img src={sessionSnapshots[0].src} className="absolute inset-0 w-full h-full object-cover animate-fade-in" alt="Today stance" />
+                              <img src={currentSnapshots[0].src} className="absolute inset-0 w-full h-full object-cover animate-fade-in" alt="Today stance" />
                               <div className="absolute inset-0 bg-black/35 z-10" />
                             </>
                           ) : (
@@ -760,7 +768,7 @@ export default function Results() {
                             </>
                           )}
                            <div className="z-10 text-center px-4 space-y-1">
-                            {sessionSnapshots.length === 0 && session && session.analysisType === "bowling" && (
+                            {currentSnapshots.length === 0 && session && session.analysisType === "bowling" && (
                               <svg className="w-24 h-24 mx-auto text-emerald-500/80 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" viewBox="0 0 120 120" fill="none" stroke="currentColor">
                                 <circle cx="65" cy="25" r="7" stroke="currentColor" strokeWidth="2.5" />
                                 <path d="M 63,32 L 55,60" stroke="currentColor" strokeWidth="3" />
@@ -774,7 +782,7 @@ export default function Results() {
                                 <circle cx="102" cy="5" r="10" stroke="#10b981" strokeWidth="1" strokeOpacity="0.4" strokeDasharray="3 3" />
                               </svg>
                             )}
-                            {sessionSnapshots.length === 0 && session && session.analysisType === "batting" && (
+                            {currentSnapshots.length === 0 && session && session.analysisType === "batting" && (
                               <svg className="w-24 h-24 mx-auto text-emerald-500/80 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" viewBox="0 0 120 120" fill="none" stroke="currentColor">
                                 <circle cx="45" cy="30" r="7" stroke="currentColor" strokeWidth="2.5" />
                                 <path d="M 45,37 L 50,65" stroke="currentColor" strokeWidth="3" />
@@ -790,12 +798,12 @@ export default function Results() {
                               </svg>
                             )}
                             <span className="text-[10px] text-emerald-400 font-mono bg-black/65 px-2.5 py-1 rounded-md block w-fit mx-auto">
-                              {sessionSnapshots[0]?.label || "Form Angle Profiled"}
+                              {currentSnapshots[0]?.label || "Form Angle Profiled"}
                             </span>
                           </div>
                           {/* Landmark Label Tag overlay */}
                           <div className="absolute bottom-3 left-3 z-20 bg-emerald-950/90 text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-xl text-[10px] space-y-0.5">
-                            <div className="font-bold flex items-center gap-1">✓ Elbow Angle: {sessionSnapshots[0]?.metrics?.elbowAngle || "162"}° (+0°)</div>
+                            <div className="font-bold flex items-center gap-1">✓ Elbow Angle: {currentSnapshots[0]?.metrics?.elbowAngle || "162"}° (+0°)</div>
                             <div className="text-[9px] text-emerald-400/80">Elbow held locked at delivery release.</div>
                           </div>
                         </div>

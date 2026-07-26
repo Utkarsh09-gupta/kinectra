@@ -198,6 +198,10 @@ components:
           type: array
           items:
             type: string
+        snapshots:
+          type: array
+          items:
+            $ref: "#/components/schemas/Snapshot"
 
     SessionSummary:
       type: object
@@ -266,6 +270,37 @@ components:
           type: array
           items:
             type: string
+        snapshots:
+          type: array
+          items:
+            $ref: "#/components/schemas/Snapshot"
+
+    Snapshot:
+      type: object
+      required:
+        - src
+        - label
+        - time
+      properties:
+        src:
+          type: string
+        label:
+          type: string
+        time:
+          type: string
+        category:
+          type: string
+        metrics:
+          type: object
+          properties:
+            elbowAngle:
+              type: number
+            spineTilt:
+              type: number
+            kneeAngle:
+              type: number
+            shoulderAlignment:
+              type: number
 
     ErrorResponse:
       type: object

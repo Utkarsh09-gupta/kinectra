@@ -141,6 +141,7 @@ router.post("/session/:sessionId/end", async (req, res): Promise<void> => {
     avgEfficiencyScore,
     overallScore,
     warnings,
+    snapshots,
   } = bodyParsed.data;
 
   try {
@@ -174,6 +175,7 @@ router.post("/session/:sessionId/end", async (req, res): Promise<void> => {
         strengths,
         improvements,
         recommendations,
+        snapshotsJson: snapshots ? JSON.stringify(snapshots) : "[]",
       })
       .where(eq(sessionsTable.id, sessionId));
 
@@ -183,7 +185,11 @@ router.post("/session/:sessionId/end", async (req, res): Promise<void> => {
       .where(eq(sessionsTable.id, sessionId))
       .limit(1);
 
-    res.json(updated[0]);
+    const s = updated[0];
+    res.json({
+      ...s,
+      snapshots: s.snapshotsJson ? JSON.parse(s.snapshotsJson) : [],
+    });
   } catch (err) {
     req.log.error({ err }, "Failed to end session");
     res.status(500).json({ error: "Failed to end session" });
@@ -211,7 +217,11 @@ router.get("/session/:sessionId", async (req, res): Promise<void> => {
       return;
     }
 
-    res.json(session[0]);
+    const s = session[0];
+    res.json({
+      ...s,
+      snapshots: s.snapshotsJson ? JSON.parse(s.snapshotsJson) : [],
+    });
   } catch (err) {
     req.log.error({ err }, "Failed to get session");
     res.status(500).json({ error: "Failed to get session" });
@@ -226,7 +236,12 @@ router.get("/session", async (req, res): Promise<void> => {
       .orderBy(desc(sessionsTable.createdAt))
       .limit(20);
 
-    res.json(sessions);
+    const mapped = sessions.map((s: any) => ({
+      ...s,
+      snapshots: s.snapshotsJson ? JSON.parse(s.snapshotsJson) : [],
+    }));
+
+    res.json(mapped);
   } catch (err) {
     req.log.error({ err }, "Failed to list sessions");
     res.status(500).json({ error: "Failed to list sessions" });

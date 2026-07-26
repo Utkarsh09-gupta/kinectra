@@ -42,7 +42,19 @@ export const EndSessionBody = zod.object({
   "avgStabilityScore": zod.number(),
   "avgEfficiencyScore": zod.number(),
   "overallScore": zod.number(),
-  "warnings": zod.array(zod.string())
+  "warnings": zod.array(zod.string()),
+  "snapshots": zod.array(zod.object({
+  "src": zod.string(),
+  "label": zod.string(),
+  "time": zod.string(),
+  "category": zod.string().optional(),
+  "metrics": zod.object({
+  "elbowAngle": zod.number().optional(),
+  "spineTilt": zod.number().optional(),
+  "kneeAngle": zod.number().optional(),
+  "shoulderAlignment": zod.number().optional()
+}).optional()
+})).optional()
 })
 
 export const EndSessionResponse = zod.object({
@@ -62,7 +74,19 @@ export const EndSessionResponse = zod.object({
   "strengths": zod.array(zod.string()),
   "improvements": zod.array(zod.string()),
   "recommendations": zod.array(zod.string()),
-  "warnings": zod.array(zod.string())
+  "warnings": zod.array(zod.string()),
+  "snapshots": zod.array(zod.object({
+  "src": zod.string(),
+  "label": zod.string(),
+  "time": zod.string(),
+  "category": zod.string().optional(),
+  "metrics": zod.object({
+  "elbowAngle": zod.number().optional(),
+  "spineTilt": zod.number().optional(),
+  "kneeAngle": zod.number().optional(),
+  "shoulderAlignment": zod.number().optional()
+}).optional()
+})).optional()
 })
 
 
@@ -90,7 +114,19 @@ export const GetSessionResponse = zod.object({
   "strengths": zod.array(zod.string()),
   "improvements": zod.array(zod.string()),
   "recommendations": zod.array(zod.string()),
-  "warnings": zod.array(zod.string())
+  "warnings": zod.array(zod.string()),
+  "snapshots": zod.array(zod.object({
+  "src": zod.string(),
+  "label": zod.string(),
+  "time": zod.string(),
+  "category": zod.string().optional(),
+  "metrics": zod.object({
+  "elbowAngle": zod.number().optional(),
+  "spineTilt": zod.number().optional(),
+  "kneeAngle": zod.number().optional(),
+  "shoulderAlignment": zod.number().optional()
+}).optional()
+})).optional()
 })
 
 
@@ -114,7 +150,19 @@ export const ListSessionsResponseItem = zod.object({
   "strengths": zod.array(zod.string()),
   "improvements": zod.array(zod.string()),
   "recommendations": zod.array(zod.string()),
-  "warnings": zod.array(zod.string())
+  "warnings": zod.array(zod.string()),
+  "snapshots": zod.array(zod.object({
+  "src": zod.string(),
+  "label": zod.string(),
+  "time": zod.string(),
+  "category": zod.string().optional(),
+  "metrics": zod.object({
+  "elbowAngle": zod.number().optional(),
+  "spineTilt": zod.number().optional(),
+  "kneeAngle": zod.number().optional(),
+  "shoulderAlignment": zod.number().optional()
+}).optional()
+})).optional()
 })
 export const ListSessionsResponse = zod.array(ListSessionsResponseItem)
 

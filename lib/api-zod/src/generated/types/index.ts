@@ -23,3 +23,5 @@ export * from './sessionSummaryAnalysisType';
 export * from './sessionSummaryDominantHand';
 export * from './sessionSummarySkillLevel';
 export * from './sessionSummaryStatus';
+export * from './snapshot';
+export * from './snapshotMetrics';

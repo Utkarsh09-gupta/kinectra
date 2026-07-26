@@ -565,6 +565,7 @@ export default function Analysis() {
           avgEfficiencyScore: avgEfficiency,
           overallScore,
           warnings: smoothedMetrics.warnings,
+          snapshots: snapshots as any,
         },
       },
       {

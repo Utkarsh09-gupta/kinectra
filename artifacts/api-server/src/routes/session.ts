@@ -271,14 +271,14 @@ router.post("/session/:sessionId/chat", async (req, res): Promise<void> => {
 
     const s = session[0];
 
-    // Load Groq API Key
-    let apiKey = process.env.GROQ_API_KEY;
+    // Load Gemini API Key
+    let apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       try {
         const envPath = path.join(process.cwd(), ".env");
         if (fs.existsSync(envPath)) {
           const envContent = fs.readFileSync(envPath, "utf-8");
-          const match = envContent.match(/GROQ_API_KEY\s*=\s*(.+)/);
+          const match = envContent.match(/GEMINI_API_KEY\s*=\s*(.+)/);
           if (match) {
             apiKey = match[1].trim().replace(/^['"]|['"]$/g, "");
           }
@@ -289,7 +289,7 @@ router.post("/session/:sessionId/chat", async (req, res): Promise<void> => {
     }
 
     if (!apiKey) {
-      res.status(500).json({ error: "GROQ_API_KEY is not defined in process.env or .env file" });
+      res.status(500).json({ error: "GEMINI_API_KEY is not defined in process.env or .env file" });
       return;
     }
 
@@ -350,15 +350,15 @@ Your instructions:
 
     messages.push({ role: "user", content: message });
 
-    // Call Groq endpoint
-    const response = await globalThis.fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // Call Gemini OpenAI-compatible endpoint
+    const response = await globalThis.fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "gemini-2.5-flash",
         messages,
         temperature: 0.3,
         max_tokens: 150
@@ -367,8 +367,8 @@ Your instructions:
 
     if (!response.ok) {
       const errorText = await response.text();
-      req.log.error({ status: response.status, errorText }, "Groq API error response");
-      res.status(502).json({ error: "Failed to fetch response from Groq AI service" });
+      req.log.error({ status: response.status, errorText }, "Gemini API error response");
+      res.status(502).json({ error: "Failed to fetch response from Gemini AI service" });
       return;
     }
 

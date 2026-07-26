@@ -697,15 +697,33 @@ export default function Results() {
                             </>
                           )}
                           <div className="z-10 text-center px-4 space-y-1">
-                            {!prevSnapshot && (
-                              <svg className="w-24 h-24 mx-auto text-red-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-                                <circle cx="50" cy="20" r="6" fill="currentColor" />
-                                <line x1="50" y1="26" x2="50" y2="55" />
-                                <line x1="50" y1="55" x2="40" y2="80" />
-                                <line x1="50" y1="55" x2="60" y2="80" />
-                                <line x1="50" y1="32" x2="35" y2="40" />
-                                <line x1="35" y1="40" x2="38" y2="55" />
-                                <circle cx="35" cy="40" r="3.5" fill="red" stroke="white" strokeWidth="1" />
+                            {!prevSnapshot && session && session.analysisType === "bowling" && (
+                              <svg className="w-24 h-24 mx-auto text-red-500/80 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+                                <circle cx="65" cy="25" r="7" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 63,32 L 55,60" stroke="currentColor" strokeWidth="3" />
+                                <line x1="45" y1="38" x2="75" y2="34" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 75,34 L 88,14 M 88,14 L 102,5" stroke="currentColor" strokeWidth="2.5" strokeDasharray="2 2" />
+                                <path d="M 45,38 L 40,55" stroke="currentColor" strokeWidth="2.5" />
+                                <line x1="48" y1="60" x2="62" y2="58" stroke="currentColor" strokeWidth="3" />
+                                <path d="M 62,58 L 78,82 M 78,82 L 90,105" stroke="currentColor" strokeWidth="3.5" />
+                                <path d="M 48,60 L 35,80 M 35,80 L 22,90" stroke="currentColor" strokeWidth="2.5" />
+                                <circle cx="102" cy="5" r="4" fill="#ef4444" stroke="white" strokeWidth="1" />
+                                <circle cx="102" cy="5" r="10" stroke="#ef4444" strokeWidth="1" strokeOpacity="0.4" strokeDasharray="3 3" />
+                              </svg>
+                            )}
+                            {!prevSnapshot && session && session.analysisType === "batting" && (
+                              <svg className="w-24 h-24 mx-auto text-red-500/80 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+                                <circle cx="45" cy="30" r="7" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 45,37 L 50,65" stroke="currentColor" strokeWidth="3" />
+                                <line x1="36" y1="42" x2="54" y2="40" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 36,42 L 28,58" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 54,40 L 40,56" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 24,52 L 10,75" stroke="#ef4444" strokeWidth="5.5" strokeLinecap="round" />
+                                <line x1="43" y1="65" x2="57" y2="64" stroke="currentColor" strokeWidth="3" />
+                                <path d="M 43,65 L 30,80 M 30,80 L 15,92" stroke="currentColor" strokeWidth="3.5" />
+                                <path d="M 57,64 L 68,85 M 68,85 L 80,105" stroke="currentColor" strokeWidth="3" />
+                                <circle cx="10" cy="75" r="5" fill="#ef4444" stroke="white" strokeWidth="1.2" />
+                                <circle cx="10" cy="75" r="12" stroke="#ef4444" strokeWidth="1" strokeOpacity="0.4" strokeDasharray="3 3" />
                               </svg>
                             )}
                             <span className="text-[10px] text-red-400 font-mono bg-black/65 px-2.5 py-1 rounded-md block w-fit mx-auto">
@@ -741,16 +759,34 @@ export default function Results() {
                               </svg>
                             </>
                           )}
-                          <div className="z-10 text-center px-4 space-y-1">
-                            {sessionSnapshots.length === 0 && (
-                              <svg className="w-24 h-24 mx-auto text-emerald-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-                                <circle cx="50" cy="20" r="6" fill="currentColor" />
-                                <line x1="50" y1="26" x2="50" y2="55" />
-                                <line x1="50" y1="55" x2="45" y2="80" />
-                                <line x1="50" y1="55" x2="55" y2="80" />
-                                <line x1="50" y1="32" x2="30" y2="30" />
-                                <line x1="30" y1="30" x2="20" y2="28" />
-                                <circle cx="30" cy="30" r="3.5" fill="emerald" stroke="white" strokeWidth="1" />
+                           <div className="z-10 text-center px-4 space-y-1">
+                            {sessionSnapshots.length === 0 && session && session.analysisType === "bowling" && (
+                              <svg className="w-24 h-24 mx-auto text-emerald-500/80 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+                                <circle cx="65" cy="25" r="7" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 63,32 L 55,60" stroke="currentColor" strokeWidth="3" />
+                                <line x1="45" y1="38" x2="75" y2="34" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 75,34 L 88,14 M 88,14 L 102,5" stroke="currentColor" strokeWidth="2.5" strokeDasharray="2 2" />
+                                <path d="M 45,38 L 40,55" stroke="currentColor" strokeWidth="2.5" />
+                                <line x1="48" y1="60" x2="62" y2="58" stroke="currentColor" strokeWidth="3" />
+                                <path d="M 62,58 L 78,82 M 78,82 L 90,105" stroke="currentColor" strokeWidth="3.5" />
+                                <path d="M 48,60 L 35,80 M 35,80 L 22,90" stroke="currentColor" strokeWidth="2.5" />
+                                <circle cx="102" cy="5" r="4" fill="#10b981" stroke="white" strokeWidth="1" />
+                                <circle cx="102" cy="5" r="10" stroke="#10b981" strokeWidth="1" strokeOpacity="0.4" strokeDasharray="3 3" />
+                              </svg>
+                            )}
+                            {sessionSnapshots.length === 0 && session && session.analysisType === "batting" && (
+                              <svg className="w-24 h-24 mx-auto text-emerald-500/80 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+                                <circle cx="45" cy="30" r="7" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 45,37 L 50,65" stroke="currentColor" strokeWidth="3" />
+                                <line x1="36" y1="42" x2="54" y2="40" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 36,42 L 28,58" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 54,40 L 40,56" stroke="currentColor" strokeWidth="2.5" />
+                                <path d="M 24,52 L 10,75" stroke="#10b981" strokeWidth="5.5" strokeLinecap="round" />
+                                <line x1="43" y1="65" x2="57" y2="64" stroke="currentColor" strokeWidth="3" />
+                                <path d="M 43,65 L 30,80 M 30,80 L 15,92" stroke="currentColor" strokeWidth="3.5" />
+                                <path d="M 57,64 L 68,85 M 68,85 L 80,105" stroke="currentColor" strokeWidth="3" />
+                                <circle cx="10" cy="75" r="5" fill="#10b981" stroke="white" strokeWidth="1.2" />
+                                <circle cx="10" cy="75" r="12" stroke="#10b981" strokeWidth="1" strokeOpacity="0.4" strokeDasharray="3 3" />
                               </svg>
                             )}
                             <span className="text-[10px] text-emerald-400 font-mono bg-black/65 px-2.5 py-1 rounded-md block w-fit mx-auto">

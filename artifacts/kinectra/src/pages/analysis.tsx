@@ -76,9 +76,13 @@ export default function Analysis() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [spokenText, setSpokenText] = useState("Optimal mechanics detected. Stance is stable.");
+  const [activeSuggestion, setActiveSuggestion] = useState(() => {
+    return config.analysisType === "bowling" ? "Start Bowling Stance" : "Start Batting Stance";
+  });
   const [isMuted, setIsMuted] = useState(() => {
     return sessionStorage.getItem("kinectra_coach_muted") === "true";
   });
+
 
   useEffect(() => {
     sessionStorage.setItem("kinectra_coach_muted", String(isMuted));
@@ -210,8 +214,23 @@ export default function Analysis() {
             }
             return updated;
           });
+
+          // Update Next Suggestion based on current movement phase
+          if (config.analysisType === "bowling") {
+            if (eventLabel === "Bowling Stance") setActiveSuggestion("Proceed to Setup Load");
+            else if (eventLabel === "Setup Load") setActiveSuggestion("Execute Landing Plant");
+            else if (eventLabel === "Landing Plant") setActiveSuggestion("Reach Bowling Release");
+            else if (eventLabel === "Bowling Release") setActiveSuggestion("Complete Delivery Drive");
+            else if (eventLabel === "Delivery Drive") setActiveSuggestion("Start Bowling Stance");
+          } else {
+            if (eventLabel === "Stance Setup") setActiveSuggestion("Begin High Backlift");
+            else if (eventLabel === "High Backlift") setActiveSuggestion("Execute Front-foot Drive");
+            else if (eventLabel === "Front-foot Drive") setActiveSuggestion("Complete Follow-through");
+            else if (eventLabel === "Follow-through") setActiveSuggestion("Start Batting Stance");
+          }
           
           // Stealth pulse feedback (emerald glowing card border instead of full screen flash)
+
           setShowGlowPulse(true);
           setTimeout(() => setShowGlowPulse(false), 350);
 
@@ -741,6 +760,15 @@ export default function Analysis() {
           </div>
 
           <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-6 shadow-2xl flex flex-col items-center justify-center gap-4 relative min-h-[280px]">
+            {/* Upper Left Suggestion Overlay */}
+            <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-mono uppercase tracking-wider font-semibold z-10 shadow-inner">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0 relative flex">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500"></span>
+              </span>
+              <span>Next: {activeSuggestion}</span>
+            </div>
+
             {/* Animated Coach SVG */}
             <CoachAvatarSVG isSpeaking={isSpeaking} />
 

@@ -666,28 +666,6 @@ export default function Results() {
             </TabsContent>
             {/* 5. Progress Tracker Tab */}
           <TabsContent value="tracker" className="space-y-6 outline-none">
-            {isGuest ? (
-              <Card className="border-border bg-card/65 backdrop-blur-md shadow-lg rounded-2xl max-w-2xl mx-auto text-center py-16 px-6 mt-4">
-                <CardContent className="flex flex-col items-center space-y-6 pt-6">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-                    <Lock className="h-7 w-7" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-foreground">Biomechanics Tracker is Locked</h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-                      Stance snapshots, historical baseline checks, and 7-day performance trajectory metrics are only available for registered athletes.
-                    </p>
-                  </div>
-                  <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm">
-                    <Link href="/auth" className="w-full">
-                      <Button className="w-full h-11 rounded-xl font-semibold shadow-md shadow-primary/15">
-                        Register Free Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
               <div className="grid lg:grid-cols-3 gap-6">
 
               
@@ -1075,7 +1053,6 @@ export default function Results() {
               </div>
 
             </div>
-            )}
           </TabsContent>
         </Tabs>
 

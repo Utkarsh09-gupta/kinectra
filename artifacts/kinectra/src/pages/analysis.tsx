@@ -19,11 +19,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useSessionContext } from "@/contexts/SessionContext";
 import { useEndSession } from "@workspace/api-client-react";
 import { useKinectraAnalysis } from "@/hooks/use-kinectra-analysis";
+import { useAuth } from "@/context/auth_context";
 
 export default function Analysis() {
   const [, setLocation] = useLocation();
   const { config } = useSessionContext();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isGuest = user?.id === "guest";
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -198,7 +201,7 @@ export default function Analysis() {
                 shoulderAlignment: Math.round(smoothedMetrics.shoulderAlignment)
               }
             }];
-            if (config.sessionId) {
+            if (config.sessionId && !isGuest) {
               try {
                 sessionStorage.setItem(`kinectra_snapshots_${config.sessionId}`, JSON.stringify(updated));
               } catch (quotaError) {
@@ -565,7 +568,7 @@ export default function Analysis() {
           avgEfficiencyScore: avgEfficiency,
           overallScore,
           warnings: smoothedMetrics.warnings,
-          snapshots: snapshots as any,
+          snapshots: isGuest ? [] : (snapshots as any),
         },
       },
       {
@@ -573,7 +576,8 @@ export default function Analysis() {
         onError: () => toast({ variant: "destructive", title: "Error ending session", description: "Failed to save session data." }),
       }
     );
-  }, [config.sessionId, stopAnalysis, endSessionMutation, smoothedMetrics.warnings, setLocation, toast]);
+  }, [config.sessionId, stopAnalysis, endSessionMutation, smoothedMetrics.warnings, setLocation, toast, isGuest]);
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

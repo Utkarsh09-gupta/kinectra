@@ -21,81 +21,227 @@ interface RichFeedback {
   cue: string;
 }
 
-function getDetailedFeedback(text: string, isBowling: boolean): RichFeedback {
+function getDetailedFeedback(text: string, isBowling: boolean, overallScore: number): RichFeedback {
   const norm = text.toLowerCase();
+  const isElite = overallScore >= 80;
+  const isFoundation = overallScore < 70;
   
   if (isBowling) {
     if (norm.includes("elbow height") || norm.includes("elbow angle")) {
+      if (isElite) {
+        return {
+          title: "Optimal Elbow Release Height",
+          telemetry: "98° Arm Extension (Optimal: 90° - 105°)",
+          impact: "Elite release height: your arm remains fully tall near the vertical plane, creating a high bounce trajectory and maximum pace transfer.",
+          cue: "💡 Elite: Maintain this release height while experimenting with delivery speeds."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Sub-Optimal Elbow Release Height",
+          telemetry: "72° Flexion (Optimal: 90° - 105°)",
+          impact: "Low elbow release: dropping the elbow reduces leverage, increases risk of push-action, and loses ball pace.",
+          cue: "💡 Foundation: Keep your delivery arm locked straight at the peak of delivery stride to maintain legal action."
+        };
+      }
       return {
         title: "Optimal Elbow Release Height",
         telemetry: "94° Arm Extension (Optimal: 90° - 105°)",
-        impact: "A high delivery arm optimizes release height, allowing the ball to bounce steeper and transfer maximum shoulder force into ball velocity.",
-        cue: "Focus on keeping the arm tall near your ear at the release point to maintain release trajectory."
+        impact: "Good release slot: arm is upright, ensuring consistent ball release and down-the-pitch leverage.",
+        cue: "💡 Intermediate: Focus on keeping the arm tall near your ear at the release point to maintain release trajectory."
       };
     }
     if (norm.includes("upright body") || norm.includes("spine tilt")) {
+      if (isElite) {
+        return {
+          title: "Excellent Torso Core Alignment",
+          telemetry: "9° Lateral Spine Tilt (Optimal: <15°)",
+          impact: "Elite core alignment: straight vertical delivery protects your spine from high-velocity shock loading and maximizes force transfer.",
+          cue: "💡 Elite: Keep this strong upright posture to reinforce core balance."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "High-Stress Core Spine Tilt",
+          telemetry: "32° Lateral Spine Tilt (Optimal: <15°)",
+          impact: "Excessive side lean puts high shear load on spine segments, losing forward energy transfer and reducing velocity.",
+          cue: "💡 Foundation: Avoid collapsing at the waist as the front foot lands; drive through vertically."
+        };
+      }
       return {
         title: "Excellent Torso Core Alignment",
         telemetry: "12° Lateral Spine Tilt (Optimal: <15°)",
         impact: "Keeping your spine tall prevents undue shear stresses on your lower lumbar region and maximizes front-foot landing brace efficiency.",
-        cue: "Avoid collapsing at the waist as the front foot lands; drive through the crease vertically."
+        cue: "💡 Intermediate: Avoid collapsing at the waist as the front foot lands; drive through the crease vertically."
       };
     }
     if (norm.includes("shoulder rotation") || norm.includes("shoulder alignment")) {
+      if (isElite) {
+        return {
+          title: "Crease Shoulder Alignment",
+          telemetry: "8° Rotation Deviation (Optimal: <15°)",
+          impact: "Elite shoulder rotation: shoulders remained square down the pitch line, giving excellent target control.",
+          cue: "💡 Elite: Reinforce this timing to maintain bowler rhythm."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Crease Shoulder Alignment Deviation",
+          telemetry: "24° Rotation Deviation (Optimal: <15°)",
+          impact: "Shoulders rotating offline pulls release stride sideways, reducing accuracy and forcing wide deliveries.",
+          cue: "💡 Foundation: Pull your non-bowling arm down actively in front of your body to pull your chest through squarely."
+        };
+      }
       return {
         title: "Crease Shoulder Alignment Deviation",
-        telemetry: "22° Lateral Rotation (Optimal: <15°)",
+        telemetry: "18° Rotation Deviation (Optimal: <15°)",
         impact: "Excessive shoulder tilt throws your delivery stride off-line. Keeping shoulders square ensures a consistent delivery release path.",
-        cue: "Focus on pulling your non-bowling arm down actively in front of your body to pull your chest and shoulders through squarely."
+        cue: "💡 Intermediate: Focus on pulling your non-bowling arm down actively in front of your body to pull your chest and shoulders through squarely."
       };
     }
     if (norm.includes("elbow angle too low")) {
+      if (isElite) {
+        return {
+          title: "Optimal Delivery Elbow Flexion",
+          telemetry: "98° Arm Extension (Optimal: 90° - 105°)",
+          impact: "Optimal arm slot: fully extended release maintains maximum momentum and pace.",
+          cue: "💡 Elite: Keep tracking this elbow extension."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Sub-Optimal Delivery Elbow Flexion",
+          telemetry: "72° Flexion (Optimal: 90° - 105°)",
+          impact: "Pace bowlers must maintain an extended arm at release. Dropping the elbow reduces leverage, cuts pace, and compromises legality.",
+          cue: "💡 Foundation: Imagine reaching for the sky at the peak of the stride; lock the arm long and straight during release."
+        };
+      }
       return {
         title: "Sub-Optimal Delivery Elbow Flexion",
-        telemetry: "72° Flexion (Optimal: 90° - 105°)",
-        impact: "Pace bowlers must maintain an extended arm at release. Dropping the elbow reduces leverage, cuts pace, and compromises legality.",
-        cue: "Imagine reaching for the sky at the peak of the stride; lock the arm long and straight during release."
+        telemetry: "82° Flexion (Optimal: 90° - 105°)",
+        impact: "Slight arm flex at release. Straightening the elbow transfers force more efficiently.",
+        cue: "💡 Intermediate: Keep arm locked straighter at the peak of delivery stride."
       };
     }
     if (norm.includes("excessive spine tilt")) {
+      if (isElite) {
+        return {
+          title: "Torso Spine Alignment Check",
+          telemetry: "11° Spine Tilt (Optimal: <15°)",
+          impact: "Good upright posture under load. Core stabilizes body rotation cleanly.",
+          cue: "💡 Elite: Continue maintaining this vertical line."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "High-Stress Torso Spine Tilt",
+          telemetry: "32° Lateral Lean (Optimal: <15°)",
+          impact: "Leaning too far sideways to clear the bowling shoulder puts high shear stress on the facet joints of the spine.",
+          cue: "💡 Foundation: Brace your core and focus on landing with a straight back, looking directly over your lead shoulder."
+        };
+      }
       return {
-        title: "High-Stress Spine Tilt",
-        telemetry: "32° Lateral Lean (Optimal: <15°)",
-        impact: "Leaning too far sideways to clear the bowling shoulder puts high shear stress on the facet joints of the spine.",
-        cue: "Brace your core and focus on landing with a straight back, looking directly over your lead shoulder."
+        title: "High-Stress Torso Spine Tilt",
+        telemetry: "22° Lateral Lean (Optimal: <15°)",
+        impact: "Moderate side lean detected. Focus on core stability during landing.",
+        cue: "💡 Intermediate: Avoid excessive torso tilt during follow-through."
       };
     }
   } else {
     if (norm.includes("front knee") || norm.includes("knee angle")) {
+      if (isElite) {
+        return {
+          title: "Knee Stance Flexion Check",
+          telemetry: "142° Knee Flexion (Optimal: 135° - 150°)",
+          impact: "Elite stable base: knee flexion supports head weight directly over the point of contact, ensuring clean stroke execution.",
+          cue: "💡 Elite: Keep timing your shots from this stable front leg."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Excessive Knee Stance Flexion",
+          telemetry: "112° Knee Stance Flexion (Optimal: 135° - 150°)",
+          impact: "Bending the front knee too deep drops your center of gravity below your support base, causing you to lose balance and drag your hands down.",
+          cue: "💡 Foundation: Step into the drive with a firm, braced front leg to create a solid pivot block for weight transfer."
+        };
+      }
       return {
         title: "Excessive Knee Stance Flexion",
-        telemetry: "112° Knee Stance Flexion (Optimal: 135° - 150°)",
-        impact: "Bending the front knee too deep drops your center of gravity below your support base, causing you to lose balance and drag your hands down.",
-        cue: "Step into the drive with a firm, braced front leg to create a solid pivot block for weight transfer."
+        telemetry: "128° Knee Stance Flexion (Optimal: 135° - 150°)",
+        impact: "Moderate knee bend: weight transfer is slightly low but base is aligned.",
+        cue: "💡 Intermediate: Step into the drive with a firm, braced front leg to create a solid pivot block for weight transfer."
       };
     }
     if (norm.includes("low bat lift") || norm.includes("elbow angle")) {
+      if (isElite) {
+        return {
+          title: "Bat Lift Backlift Stance",
+          telemetry: "96° Bat-Elbow Angle (Optimal: 90°+)",
+          impact: "Elite bat lift: high hands provide a full swing path and maximum power generation through the line.",
+          cue: "💡 Elite: Maintain this high backlift timing."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Low Backswing Bat Lift",
+          telemetry: "72° Bat-Elbow Angle (Optimal: 90°+)",
+          impact: "A low backswing limits the downward acceleration path of the bat, reducing swing power and timing options.",
+          cue: "💡 Foundation: Preshow high hands by lifting the back elbow parallel to the ground during the bowler's approach."
+        };
+      }
       return {
         title: "Low Backswing Bat Lift",
-        telemetry: "74° Bat-Elbow Angle (Optimal: 90°+)",
-        impact: "A low backswing limits the downward acceleration path of the bat, reducing swing power and timing options.",
-        cue: "Preshow high hands by lifting the back elbow parallel to the ground during the bowler's approach."
+        telemetry: "84° Bat-Elbow Angle (Optimal: 90°+)",
+        impact: "Moderate bat lift: swing arc is slightly restricted but hands are in position.",
+        cue: "💡 Intermediate: Preshow high hands by lifting the back elbow parallel to the ground during the bowler's approach."
       };
     }
     if (norm.includes("front-foot stance") || norm.includes("stable base")) {
+      if (isElite) {
+        return {
+          title: "Perfect Balance Stance Base",
+          telemetry: "142° Knee Angle (Optimal: 135° - 150°)",
+          impact: "Perfect stance balance: eyes stay level with the ball path, facilitating optimal shot timing and clean middle contact.",
+          cue: "💡 Elite: Keep this solid footwork focus."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Unbalanced Stance Base",
+          telemetry: "112° Knee Angle (Optimal: 135° - 150°)",
+          impact: "Unbalanced base: front stride collapsing forward decreases shot control and increases vulnerability to LBW or edges.",
+          cue: "💡 Foundation: Keep your nose over your front toe when driving forward to lock in this balance base."
+        };
+      }
       return {
         title: "Perfect Balance Stance Base",
-        telemetry: "142° Knee Angle (Optimal: 135° - 150°)",
+        telemetry: "132° Knee Angle (Optimal: 135° - 150°)",
         impact: "A stable front-foot bend supports the head weight directly over the ball, ensuring timing precision and straight bat contact.",
-        cue: "Keep your nose over your front toe when driving forward to lock in this balance base."
+        cue: "💡 Intermediate: Keep your nose over your front toe when driving forward to lock in this balance base."
       };
     }
     if (norm.includes("shoulder alignment") || norm.includes("shoulder position")) {
+      if (isElite) {
+        return {
+          title: "Elite Straight-Bat Shoulder Line",
+          telemetry: "6° Pitch Deviation (Optimal: <12°)",
+          impact: "Elite straight-shoulder line: prevents body opening up too early, keeping the bat face pointing square to the target.",
+          cue: "💡 Elite: Continue leading with your shoulder to play straight."
+        };
+      }
+      if (isFoundation) {
+        return {
+          title: "Open Shoulder Position Line",
+          telemetry: "18° Pitch Deviation (Optimal: <12°)",
+          impact: "Shoulder opens up too early, forcing cross-bat shots and leading edges into the offside ring.",
+          cue: "💡 Foundation: Point your non-dominant shoulder directly at the bowler until the split second of contact."
+        };
+      }
       return {
         title: "Elite Straight-Bat Shoulder Line",
-        telemetry: "8° Pitch Deviation (Optimal: <12°)",
+        telemetry: "10° Pitch Deviation (Optimal: <12°)",
         impact: "A shoulder aligned straight down the pitch prevents the body from opening up too early, keeping the bat face pointing square to the target.",
-        cue: "Point your non-dominant shoulder directly at the bowler until the split second of contact."
+        cue: "💡 Intermediate: Point your non-dominant shoulder directly at the bowler until the split second of contact."
       };
     }
   }
@@ -553,7 +699,7 @@ export default function Results() {
                 </CardHeader>
                 <CardContent className="pt-4 space-y-4">
                   {session.strengths.map((str, i) => {
-                    const detail = getDetailedFeedback(str, session.analysisType === "bowling");
+                    const detail = getDetailedFeedback(str, session.analysisType === "bowling", session.overallScore);
                     return (
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
@@ -590,7 +736,7 @@ export default function Results() {
                 </CardHeader>
                 <CardContent className="pt-4 space-y-4">
                   {session.improvements.map((imp, i) => {
-                    const detail = getDetailedFeedback(imp, session.analysisType === "bowling");
+                    const detail = getDetailedFeedback(imp, session.analysisType === "bowling", session.overallScore);
                     return (
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}

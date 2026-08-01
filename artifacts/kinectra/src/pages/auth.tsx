@@ -371,7 +371,7 @@ export default function Auth() {
                 <div className="w-full border-t border-border/50"></div>
               </div>
               <span className="relative px-3 text-xs uppercase tracking-wider text-muted-foreground bg-card rounded-md">
-                Or continue with
+                Or
               </span>
             </div>
 
@@ -383,9 +383,8 @@ export default function Auth() {
 
               <Button
                 type="button"
-                variant="outline"
                 onClick={handleGuestContinue}
-                className="w-full h-12 rounded-xl border-border/80 hover:bg-muted/45 hover:text-foreground font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+                className="w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
               >
                 <User className="h-4 w-4" />
                 Continue as Guest

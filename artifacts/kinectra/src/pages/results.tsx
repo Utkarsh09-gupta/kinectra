@@ -465,13 +465,13 @@ export default function Results() {
                           <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
                           <h4 className="font-semibold text-sm text-foreground">{detail.title}</h4>
                         </div>
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-semibold">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-semibold">
                           📊 {detail.telemetry}
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                           <span className="font-semibold text-foreground/80">Why it matters:</span> {detail.impact}
                         </p>
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400/90 font-medium bg-emerald-500/5 rounded-lg p-2 leading-relaxed border border-emerald-500/5">
+                        <div className="text-sm text-emerald-600 dark:text-emerald-400/90 font-medium bg-emerald-500/5 rounded-lg p-2.5 leading-relaxed border border-emerald-500/5">
                           💡 <span className="font-semibold">Coaching Tip:</span> {detail.cue}
                         </div>
                       </motion.div>
@@ -502,13 +502,13 @@ export default function Results() {
                           <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
                           <h4 className="font-semibold text-sm text-foreground">{detail.title}</h4>
                         </div>
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-mono font-semibold">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-mono font-semibold">
                           ⚠️ {detail.telemetry}
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                           <span className="font-semibold text-foreground/80">Biomechanical Impact:</span> {detail.impact}
                         </p>
-                        <div className="text-[10px] text-amber-600 dark:text-amber-400/90 font-medium bg-amber-500/5 rounded-lg p-2 leading-relaxed border border-amber-500/5">
+                        <div className="text-sm text-amber-600 dark:text-amber-400/90 font-medium bg-amber-500/5 rounded-lg p-2.5 leading-relaxed border border-amber-500/5">
                           👟 <span className="font-semibold">Coaching Cue:</span> {detail.cue}
                         </div>
                       </motion.div>

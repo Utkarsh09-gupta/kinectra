@@ -11,7 +11,7 @@ import { KinectraLogoSVG } from "@/components/layout/kinectra_logo";
 export default function Auth() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [, setLocation] = useLocation();
-  const { login, signup, loginWithGoogle } = useAuth();
+  const { login, signup, loginWithGoogle, loginAsGuest } = useAuth();
   const { toast } = useToast();
 
   // Form states
@@ -176,6 +176,16 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  const handleGuestContinue = () => {
+    loginAsGuest();
+    toast({
+      title: "Guest Session Started",
+      description: "Entering dashboard as Guest Athlete.",
+    });
+    setLocation("/setup");
+  };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center relative overflow-hidden px-4 py-12">
@@ -361,15 +371,25 @@ export default function Auth() {
                 <div className="w-full border-t border-border/50"></div>
               </div>
               <span className="relative px-3 text-xs uppercase tracking-wider text-muted-foreground bg-card rounded-md">
-                Or authenticate with
+                Or continue with
               </span>
             </div>
 
-            <div className="w-full flex justify-center min-h-[44px] relative z-20">
+            <div className="w-full flex flex-col gap-3 relative z-20">
               <div 
                 id="google-signin-button" 
                 className="w-full transition-transform hover:scale-[1.01] active:scale-[0.99]"
               />
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGuestContinue}
+                className="w-full h-12 rounded-xl border-border/80 hover:bg-muted/45 hover:text-foreground font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+              >
+                <User className="h-4 w-4" />
+                Continue as Guest
+              </Button>
             </div>
           </CardContent>
         </Card>

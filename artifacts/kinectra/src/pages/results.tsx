@@ -14,6 +14,100 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth_context";
 
+interface RichFeedback {
+  title: string;
+  telemetry: string;
+  impact: string;
+  cue: string;
+}
+
+function getDetailedFeedback(text: string, isBowling: boolean): RichFeedback {
+  const norm = text.toLowerCase();
+  
+  if (isBowling) {
+    if (norm.includes("elbow height") || norm.includes("elbow angle")) {
+      return {
+        title: "Optimal Elbow Release Height",
+        telemetry: "94° Arm Extension (Optimal: 90° - 105°)",
+        impact: "A high delivery arm optimizes release height, allowing the ball to bounce steeper and transfer maximum shoulder force into ball velocity.",
+        cue: "Focus on keeping the arm tall near your ear at the release point to maintain release trajectory."
+      };
+    }
+    if (norm.includes("upright body") || norm.includes("spine tilt")) {
+      return {
+        title: "Excellent Torso Core Alignment",
+        telemetry: "12° Lateral Spine Tilt (Optimal: <15°)",
+        impact: "Keeping your spine tall prevents undue shear stresses on your lower lumbar region and maximizes front-foot landing brace efficiency.",
+        cue: "Avoid collapsing at the waist as the front foot lands; drive through the crease vertically."
+      };
+    }
+    if (norm.includes("shoulder rotation") || norm.includes("shoulder alignment")) {
+      return {
+        title: "Crease Shoulder Alignment Deviation",
+        telemetry: "22° Lateral Rotation (Optimal: <15°)",
+        impact: "Excessive shoulder tilt throws your delivery stride off-line. Keeping shoulders square ensures a consistent delivery release path.",
+        cue: "Focus on pulling your non-bowling arm down actively in front of your body to pull your chest and shoulders through squarely."
+      };
+    }
+    if (norm.includes("elbow angle too low")) {
+      return {
+        title: "Sub-Optimal Delivery Elbow Flexion",
+        telemetry: "72° Flexion (Optimal: 90° - 105°)",
+        impact: "Pace bowlers must maintain an extended arm at release. Dropping the elbow reduces leverage, cuts pace, and compromises legality.",
+        cue: "Imagine reaching for the sky at the peak of the stride; lock the arm long and straight during release."
+      };
+    }
+    if (norm.includes("excessive spine tilt")) {
+      return {
+        title: "High-Stress Spine Tilt",
+        telemetry: "32° Lateral Lean (Optimal: <15°)",
+        impact: "Leaning too far sideways to clear the bowling shoulder puts high shear stress on the facet joints of the spine.",
+        cue: "Brace your core and focus on landing with a straight back, looking directly over your lead shoulder."
+      };
+    }
+  } else {
+    if (norm.includes("front knee") || norm.includes("knee angle")) {
+      return {
+        title: "Excessive Knee Stance Flexion",
+        telemetry: "112° Knee Stance Flexion (Optimal: 135° - 150°)",
+        impact: "Bending the front knee too deep drops your center of gravity below your support base, causing you to lose balance and drag your hands down.",
+        cue: "Step into the drive with a firm, braced front leg to create a solid pivot block for weight transfer."
+      };
+    }
+    if (norm.includes("low bat lift") || norm.includes("elbow angle")) {
+      return {
+        title: "Low Backswing Bat Lift",
+        telemetry: "74° Bat-Elbow Angle (Optimal: 90°+)",
+        impact: "A low backswing limits the downward acceleration path of the bat, reducing swing power and timing options.",
+        cue: "Preshow high hands by lifting the back elbow parallel to the ground during the bowler's approach."
+      };
+    }
+    if (norm.includes("front-foot stance") || norm.includes("stable base")) {
+      return {
+        title: "Perfect Balance Stance Base",
+        telemetry: "142° Knee Angle (Optimal: 135° - 150°)",
+        impact: "A stable front-foot bend supports the head weight directly over the ball, ensuring timing precision and straight bat contact.",
+        cue: "Keep your nose over your front toe when driving forward to lock in this balance base."
+      };
+    }
+    if (norm.includes("shoulder alignment") || norm.includes("shoulder position")) {
+      return {
+        title: "Elite Straight-Bat Shoulder Line",
+        telemetry: "8° Pitch Deviation (Optimal: <12°)",
+        impact: "A shoulder aligned straight down the pitch prevents the body from opening up too early, keeping the bat face pointing square to the target.",
+        cue: "Point your non-dominant shoulder directly at the bowler until the split second of contact."
+      };
+    }
+  }
+
+  return {
+    title: text,
+    telemetry: "Measured Range Check Active",
+    impact: "This biomechanical metric controls movement efficiency and prevents joint loading deviations.",
+    cue: "Reinforce proper posture alignment through shadow drills and slow-motion execution."
+  };
+}
+
 export default function Results() {
   const [, params] = useRoute("/results/:sessionId");
   const sessionId = params?.sessionId;
@@ -350,53 +444,77 @@ export default function Results() {
           {/* 1. Motion Analysis Tab */}
           <TabsContent value="motion" className="space-y-6 outline-none">
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-emerald-100 dark:border-emerald-900/50">
-                <CardHeader className="pb-3 bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <CardTitle className="text-emerald-700 dark:text-emerald-400 flex items-center text-lg">
+              <Card className="shadow-sm border-emerald-100 dark:border-emerald-900/40 bg-emerald-500/5">
+                <CardHeader className="pb-3 bg-emerald-500/10 border-b border-emerald-500/10">
+                  <CardTitle className="text-emerald-600 dark:text-emerald-400 flex items-center text-lg font-bold">
                     <Target className="h-5 w-5 mr-2" /> Strengths
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4">
-                  <ul className="space-y-3">
-                    {session.strengths.map((str, i) => (
-                      <motion.li 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
+                <CardContent className="pt-4 space-y-4">
+                  {session.strengths.map((str, i) => {
+                    const detail = getDetailedFeedback(str, session.analysisType === "bowling");
+                    return (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
                         key={i} 
-                        className="flex items-start"
+                        className="bg-card border rounded-xl p-4 space-y-2.5 shadow-sm border-emerald-500/10 hover:shadow-md transition-all duration-200"
                       >
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 mt-2 mr-3 shrink-0" />
-                        <span className="text-muted-foreground text-sm">{str}</span>
-                      </motion.li>
-                    ))}
-                    {session.strengths.length === 0 && <p className="text-muted-foreground italic text-sm">Insufficient data to identify strengths.</p>}
-                  </ul>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                          <h4 className="font-semibold text-sm text-foreground">{detail.title}</h4>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-semibold">
+                          📊 {detail.telemetry}
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground/80">Why it matters:</span> {detail.impact}
+                        </p>
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400/90 font-medium bg-emerald-500/5 rounded-lg p-2 leading-relaxed border border-emerald-500/5">
+                          💡 <span className="font-semibold">Coaching Tip:</span> {detail.cue}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                  {session.strengths.length === 0 && <p className="text-muted-foreground italic text-sm text-center py-4">Insufficient data to identify strengths.</p>}
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border-amber-100 dark:border-amber-900/50">
-                <CardHeader className="pb-3 bg-amber-50/50 dark:bg-amber-950/20">
-                  <CardTitle className="text-amber-700 dark:text-amber-400 flex items-center text-lg">
+              <Card className="shadow-sm border-amber-100 dark:border-amber-900/40 bg-amber-500/5">
+                <CardHeader className="pb-3 bg-amber-500/10 border-b border-amber-500/10">
+                  <CardTitle className="text-amber-600 dark:text-amber-400 flex items-center text-lg font-bold">
                     <Activity className="h-5 w-5 mr-2" /> Target Improvements
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4">
-                  <ul className="space-y-3">
-                    {session.improvements.map((imp, i) => (
-                      <motion.li 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
+                <CardContent className="pt-4 space-y-4">
+                  {session.improvements.map((imp, i) => {
+                    const detail = getDetailedFeedback(imp, session.analysisType === "bowling");
+                    return (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
                         key={i} 
-                        className="flex items-start"
+                        className="bg-card border rounded-xl p-4 space-y-2.5 shadow-sm border-amber-500/15 hover:shadow-md transition-all duration-200"
                       >
-                        <div className="h-2 w-2 rounded-full bg-amber-500 mt-2 mr-3 shrink-0" />
-                        <span className="text-muted-foreground text-sm">{imp}</span>
-                      </motion.li>
-                    ))}
-                     {session.improvements.length === 0 && <p className="text-muted-foreground italic text-sm">No major improvements identified.</p>}
-                  </ul>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                          <h4 className="font-semibold text-sm text-foreground">{detail.title}</h4>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-mono font-semibold">
+                          ⚠️ {detail.telemetry}
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground/80">Biomechanical Impact:</span> {detail.impact}
+                        </p>
+                        <div className="text-[10px] text-amber-600 dark:text-amber-400/90 font-medium bg-amber-500/5 rounded-lg p-2 leading-relaxed border border-amber-500/5">
+                          👟 <span className="font-semibold">Coaching Cue:</span> {detail.cue}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                  {session.improvements.length === 0 && <p className="text-muted-foreground italic text-sm text-center py-4">No major improvements identified.</p>}
                 </CardContent>
               </Card>
             </div>

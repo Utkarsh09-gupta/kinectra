@@ -21,6 +21,8 @@ interface AuthContextType {
     sportsAcademy?: string,
     password?: string
   ) => Promise<boolean>;
+  loginWithGoogle: (credential: string) => Promise<boolean>;
+  loginAsGuest: () => void;
   logout: () => void;
 }
 
@@ -45,9 +47,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             const profile = await res.json();
             setUser(profile);
+            setIsLoading(false);
+            return;
           } else {
             localStorage.removeItem("kinectra_token");
           }
+        }
+
+        const isGuest = localStorage.getItem("kinectra_guest") === "true";
+        if (isGuest) {
+          setUser({
+            id: "guest",
+            username: "Guest Athlete",
+            email: "guest@kinectra.local",
+            skillLevel: "intermediate",
+            dominantHand: "right",
+          });
         }
       } catch (e) {
         console.error("Failed to load user session token", e);
@@ -114,13 +129,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (credential: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ credential }),
+      });
+      if (res.ok) {
+        const { token, user: profile } = await res.json();
+        setUser(profile);
+        localStorage.setItem("kinectra_token", token);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const loginAsGuest = () => {
+    const guestUser: UserProfile = {
+      id: "guest",
+      username: "Guest Athlete",
+      email: "guest@kinectra.local",
+      skillLevel: "intermediate",
+      dominantHand: "right",
+    };
+    setUser(guestUser);
+    localStorage.setItem("kinectra_guest", "true");
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("kinectra_token");
+    localStorage.removeItem("kinectra_guest");
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, loginWithGoogle, loginAsGuest, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -160,6 +160,7 @@ export function Navbar() {
               Start Analysis
             </Button>
           </Link>
+
           {isHome && (
             <button
               className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"

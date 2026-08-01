@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/auth_context";
@@ -11,7 +11,7 @@ import { KinectraLogoSVG } from "@/components/layout/kinectra_logo";
 export default function Auth() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [, setLocation] = useLocation();
-  const { login, signup } = useAuth();
+  const { login, signup, loginWithGoogle } = useAuth();
   const { toast } = useToast();
 
   // Form states
@@ -22,6 +22,86 @@ export default function Auth() {
   const [skillLevel, setSkillLevel] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
   const [dominantHand, setDominantHand] = useState<"right" | "left">("right");
   const [isLoading, setIsLoading] = useState(false);
+  const [gsiLoaded, setGsiLoaded] = useState(false);
+
+  useEffect(() => {
+    const scriptId = "google-gsi-client";
+    let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+    const initGoogleBtn = () => {
+      setGsiLoaded(true);
+    };
+
+    if (!script) {
+      script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.id = scriptId;
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogleBtn;
+      document.body.appendChild(script);
+    } else {
+      initGoogleBtn();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!gsiLoaded) return;
+
+    try {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        console.warn("VITE_GOOGLE_CLIENT_ID is not configured.");
+        return;
+      }
+
+      // @ts-ignore
+      window.google?.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: any) => {
+          setIsLoading(true);
+          try {
+            const success = await loginWithGoogle(response.credential);
+            if (success) {
+              toast({
+                title: "Welcome Back!",
+                description: "Signed in successfully with Google.",
+              });
+              setLocation("/setup");
+            } else {
+              toast({
+                title: "Authentication Failed",
+                description: "Failed to authenticate with Google. Please try again.",
+                variant: "destructive",
+              });
+            }
+          } catch (e) {
+            toast({
+              title: "Authentication Error",
+              description: "An unexpected error occurred during Google sign in.",
+              variant: "destructive",
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        },
+      });
+
+      // @ts-ignore
+      window.google?.accounts.id.renderButton(
+        document.getElementById("google-signin-button"),
+        { 
+          theme: "filled_black", 
+          size: "large", 
+          width: "100%", 
+          text: activeTab === "login" ? "signin_with" : "signup_with",
+          shape: "rectangular" 
+        }
+      );
+    } catch (err) {
+      console.error("Error rendering Google Sign-In button:", err);
+    }
+  }, [gsiLoaded, activeTab, loginWithGoogle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,6 +355,22 @@ export default function Auth() {
                     : "Create Athlete Profile"}
               </Button>
             </form>
+
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border/50"></div>
+              </div>
+              <span className="relative px-3 text-xs uppercase tracking-wider text-muted-foreground bg-card rounded-md">
+                Or authenticate with
+              </span>
+            </div>
+
+            <div className="w-full flex justify-center min-h-[44px] relative z-20">
+              <div 
+                id="google-signin-button" 
+                className="w-full transition-transform hover:scale-[1.01] active:scale-[0.99]"
+              />
+            </div>
           </CardContent>
         </Card>
       </motion.div>

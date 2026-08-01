@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   ChevronRight,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth_context";
 
 // ─── Animated cricket pose landmarks ──────────────────────────────
 const JOINTS = [
@@ -275,6 +276,15 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 export default function Home() {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [, setLocation] = useLocation();
+  const { user, loginAsGuest } = useAuth();
+
+  const handleStartDemo = () => {
+    if (!user) {
+      loginAsGuest();
+    }
+    setLocation("/setup");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -343,6 +353,11 @@ export default function Home() {
                     Start Free Analysis <ChevronRight className="h-4 w-4" />
                   </Button>
                 </Link>
+
+                <Button onClick={handleStartDemo} variant="outline" size="lg" className="h-12 px-8 text-base font-semibold border-primary/30 text-primary hover:bg-primary/5 gap-2">
+                  Try Live Demo <Zap className="h-4 w-4" />
+                </Button>
+
                 <button
                   onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
                   className="h-12 px-8 text-base font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors text-foreground/70 hover:text-foreground"
@@ -535,13 +550,17 @@ export default function Home() {
               </FadeIn>
             </div>
 
-            <FadeIn delay={0.2} className="text-center mt-12">
+            <FadeIn delay={0.2} className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
               <Link href="/setup">
                 <Button size="lg" className="h-12 px-10 text-base font-semibold shadow-lg shadow-primary/20 gap-2">
                   Run Your Analysis <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
+              <Button onClick={handleStartDemo} variant="outline" size="lg" className="h-12 px-10 text-base font-semibold border-primary/30 text-primary hover:bg-primary/5 gap-2">
+                Try Live Demo <Zap className="h-4 w-4" />
+              </Button>
             </FadeIn>
+
           </div>
         </section>
 
@@ -580,6 +599,7 @@ export default function Home() {
                   <Link href="/setup" className="mt-8">
                     <Button variant="outline" className="w-full h-11 rounded-xl font-semibold">Get Started</Button>
                   </Link>
+
                 </div>
               </FadeIn>
 
@@ -701,6 +721,7 @@ export default function Home() {
                 <li><button onClick={() => setIsAboutOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">About Us</button></li>
                 <li><button onClick={() => setIsContactOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none p-0 cursor-pointer">Contact Us</button></li>
                 <li><Link href="/setup" className="text-muted-foreground hover:text-foreground transition-colors">Product Staging</Link></li>
+
               </ul>
             </div>
 

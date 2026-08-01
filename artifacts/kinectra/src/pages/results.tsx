@@ -108,6 +108,103 @@ function getDetailedFeedback(text: string, isBowling: boolean): RichFeedback {
   };
 }
 
+interface TrainingDay {
+  num: number;
+  title: string;
+  drills: string[];
+}
+
+function generateWeeklyPlan(overallScore: number, isBowling: boolean): TrainingDay[] {
+  const isElite = overallScore >= 90;
+  const isFoundation = overallScore < 70;
+
+  if (isBowling) {
+    return [
+      {
+        num: 1,
+        title: "Mobility & Baseline Stance",
+        drills: [
+          "Spine rotations & arm circles (10 mins)",
+          "Batting/Bowling stance alignment review in mirror (10 mins)",
+          isElite ? "Plank core holds (3x90s)" : isFoundation ? "Plank core holds (3x30s)" : "Plank core holds (3x60s)"
+        ]
+      },
+      {
+        num: 2,
+        title: "Targeted Technical Drills",
+        drills: [
+          isElite
+            ? "Target Spot Bowling (20 minutes): Place a narrow target marker on a good length. Bowl 24 fast deliveries focusing on maximum speed release variance while hitting the target."
+            : isFoundation
+            ? "Target Spot Bowling (10 minutes): Set a wide target on a good length. Bowl 12 deliveries focusing on basic stance stability."
+            : "Target Spot Bowling (15 minutes): Set a coin/target on a good length. Bowl 18 deliveries focusing on consistent repetition of current posture.",
+          "Video review of target positions"
+        ]
+      },
+      {
+        num: 3,
+        title: "Strength & Power",
+        drills: [
+          isElite ? "Explosive jump-lunges (3x12 per leg)" : isFoundation ? "Bodyweight lunges (3x8 per leg)" : "Weighted lunges (3x10 per leg)",
+          isElite ? "Dumbbell shoulder presses (heavy load, 3x15)" : isFoundation ? "Dumbbell shoulder presses (light load, 3x10)" : "Dumbbell shoulder presses (moderate load, 3x12)",
+          isElite ? "High-resistance rotator cuff band exercises (3x20)" : isFoundation ? "Rotator cuff band exercises (slow stretch, 3x10)" : "Rotator cuff band exercises (3x15)"
+        ]
+      },
+      {
+        num: 4,
+        title: "Active Rest & Yoga",
+        drills: [
+          "Deep hamstring & chest opening stretches",
+          "Gentle breathing exercises",
+          "Hydration and nutrition monitoring"
+        ]
+      }
+    ];
+  } else {
+    return [
+      {
+        num: 1,
+        title: "Mobility & Stance Balance",
+        drills: [
+          "Neck rotations & dynamic wrist flex stretch (10 mins)",
+          "Shadow swings in front of mirror focusing on head stabilization (10 mins)",
+          isElite ? "Core plank holds (3x90s)" : isFoundation ? "Core plank holds (3x30s)" : "Core plank holds (3x60s)"
+        ]
+      },
+      {
+        num: 2,
+        title: "Targeted Technical Drills",
+        drills: [
+          isElite
+            ? "Underarm throwdown drives (25 minutes): Execute 30 high-velocity drives against throwdowns, practicing quick feet recovery back into balance base."
+            : isFoundation
+            ? "Underarm throwdown drives (10 minutes): Execute 12 close front-foot drives focusing on simple head weight balance over the front toe."
+            : "Underarm throwdown drives (15 minutes): Execute 20 straight front-foot drives focusing on maintaining weight over the landing toe.",
+          "Mirror swing-path backswing checks"
+        ]
+      },
+      {
+        num: 3,
+        title: "Strength & Power",
+        drills: [
+          isElite ? "Goblet squats for landing base power (heavy load, 3x15)" : isFoundation ? "Air squats for alignment stability (3x10)" : "Goblet squats for landing base power (moderate load, 3x12)",
+          isElite ? "Wrist curls with dumbbells (moderate load, 3x15)" : isFoundation ? "Wrist dynamic stretch drills (3x10)" : "Wrist curls with light weights (3x12)",
+          isElite ? "Balance board single leg holds (3x60s)" : isFoundation ? "Single leg floor stands for stability balance (3x30s)" : "Balance board single leg holds (3x45s)"
+        ]
+      },
+      {
+        num: 4,
+        title: "Active Rest & Yoga",
+        drills: [
+          "Forearm and wrist dynamic stretches",
+          "Deep hip-opening balance stretches",
+          "Focus meditation and hydration monitoring"
+        ]
+      }
+    ];
+  }
+}
+
 export default function Results() {
   const [, params] = useRoute("/results/:sessionId");
   const sessionId = params?.sessionId;
@@ -145,6 +242,10 @@ export default function Results() {
       queryKey: getGetSessionQueryKey(sessionId || "")
     }
   });
+
+  const planDays = session
+    ? generateWeeklyPlan(session.overallScore, session.analysisType === "bowling")
+    : [];
 
   const currentSnapshots = (session?.snapshots && session.snapshots.length > 0)
     ? session.snapshots
@@ -756,32 +857,50 @@ export default function Results() {
           {/* 4. Training Planner Tab */}
           <TabsContent value="planner" className="space-y-6 outline-none">
             <Card className="shadow-sm">
-              <CardHeader className="pb-3 border-b">
-                <CardTitle className="text-lg flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
-                  Targeted Training Drills ({session.analysisType === "bowling" ? "Bowling" : "Batting"})
-                </CardTitle>
-                <CardDescription>Plan customized for skill tier: {session.skillLevel}</CardDescription>
+              <CardHeader className="pb-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 text-primary rounded-lg shrink-0">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold flex items-center gap-2 uppercase tracking-wide">
+                      {session.skillLevel.toUpperCase()} Weekly Training Plan - {session.analysisType === "bowling" ? "Bowling" : "Batting"} Form Focus
+                    </CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground mt-0.5">
+                      Autonomous weekly structured schedule generated dynamically to fit your physical profile.
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="grid md:grid-cols-3 gap-4">
-                  {session.analysisType === "bowling" ? (
-                    <>
-                      <DrillCard title="High Release Target Drill" duration="15 mins" desc="Practice delivering from a high arm slot. Hang a target marker to check height at release." />
-                      <DrillCard title="Core-Tilt Uprights" duration="10 mins" desc="Perform delivery strides with focus on keeping the chest and shoulders tall, minimizing spine side-bend." />
-                      <DrillCard title="Crease Alignment Runs" duration="15 mins" desc="Drill focused on crease position. Run straight through without rotating hips prematurely." />
-                    </>
-                  ) : (
-                    <>
-                      <DrillCard title="Stance Head-Still Drill" duration="15 mins" desc="Bat against soft-toss or throwdowns. Keep nose aligned with front foot to prevent lateral head movement." />
-                      <DrillCard title="Front Foot Landing Stride" duration="10 mins" desc="Step out and plant front foot firmly without bending the knee past 130 degrees. Focus on stable weight transfer." />
-                      <DrillCard title="Bat Lift Balance Routine" duration="15 mins" desc="Shadow bat lifts in front of mirror. Ensure bat cock angle stays above 90 degrees during backlift." />
-                    </>
-                  )}
+                <div className="relative pl-6 border-l-2 border-primary/20 space-y-8 ml-3">
+                  {planDays.map((day, idx) => (
+                    <div key={idx} className="relative">
+                      {/* Timeline Dot */}
+                      <div className="absolute -left-[31px] top-1.5 w-3 h-3 bg-primary rounded-full ring-4 ring-background" />
+                      
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-primary">
+                          Day {day.num} • {day.title}
+                        </h4>
+                        
+                        <Card className="bg-muted/10 border border-slate-200/60 dark:border-slate-800/60 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                          <ul className="space-y-2 text-sm text-muted-foreground text-justify">
+                            {day.drills.map((drill, dIdx) => (
+                              <li key={dIdx} className="flex items-start">
+                                <span className="text-primary mr-2.5 select-none">•</span>
+                                <span>{drill}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </Card>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
-              </Card>
-            </TabsContent>
+            </Card>
+          </TabsContent>
             {/* 5. Progress Tracker Tab */}
           <TabsContent value="tracker" className="space-y-6 outline-none">
               <div className="grid lg:grid-cols-3 gap-6">
